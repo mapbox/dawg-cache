@@ -1,0 +1,16 @@
+#include "builder.cpp"
+#include <iostream>
+#include <fstream>
+
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        std::cout << "Wrong number of arguments";
+        return -1;
+    }
+
+    std::fstream infile, outfile;
+    infile.open(argv[1], std::fstream::in);
+    outfile.open(argv[2], std::fstream::out | std::fstream::binary);
+
+    build_dawg(&infile, &outfile, true);
+}
