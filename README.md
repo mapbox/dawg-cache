@@ -1,4 +1,4 @@
-# py-dawg-builder
+# js-dawg-builder
 This is a package that implements two variants of a [directed acyclic word graph](https://en.wikipedia.org/wiki/Deterministic_acyclic_finite_state_automaton) in C++ with a node.js wrapper. One representation is conventional and complete, and ported from a Python implementation [here](https://gist.github.com/smhanov/94230b422c2100ae4218), and the other is a slightly-lossy very compact read-only representation meant to be used as an alternative to a hash table as a first-line membership cache in [carmen](https://github.com/mapbox/carmen/).
 
 Preliminary feasibility assessment was done using the original Python implementation linked above, with the products of that experimentation available in the [py-dawg-builder](https://github.com/mapbox/py-dawg-builder) repository. Complete specs for the proposed compact format are available in its [README](https://github.com/mapbox/py-dawg-builder/blob/master/README.md#background). At the moment, operation on the same input file should result in a bit-for-bit identical output file.
