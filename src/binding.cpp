@@ -18,6 +18,12 @@ class JSDawg : public Nan::ObjectWrap {
             tpl->SetClassName(Nan::New("Dawg").ToLocalChecked());
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
+            SetPrototypeMethod(tpl, "insert", Insert);
+            SetPrototypeMethod(tpl, "finish", Finish);
+            SetPrototypeMethod(tpl, "lookup", Lookup);
+            SetPrototypeMethod(tpl, "edgeCount", EdgeCount);
+            SetPrototypeMethod(tpl, "nodeCount", NodeCount);
+
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
             Nan::Set(
                 target,
@@ -39,6 +45,39 @@ class JSDawg : public Nan::ObjectWrap {
             v8::Local<v8::Function> cons = Nan::New(constructor());
             info.GetReturnValue().Set(cons->NewInstance());
         }
+    }
+
+    static NAN_METHOD(Insert) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        String::Utf8Value utf8_value(info[0].As<String>());
+        std::string input = std::string(*utf8_value, utf8_value.length());
+        bool ret = obj->dawg_.insert(input);
+
+        info.GetReturnValue().Set(ret);
+    }
+
+    static NAN_METHOD(Finish) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        obj->dawg_.finish();
+    }
+
+    static NAN_METHOD(Lookup) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        String::Utf8Value utf8_value(info[0].As<String>());
+        std::string input = std::string(*utf8_value, utf8_value.length());
+        bool ret = obj->dawg_.lookup(input);
+
+        info.GetReturnValue().Set(ret);
+    }
+
+    static NAN_METHOD(EdgeCount) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        info.GetReturnValue().Set(obj->dawg_.edge_count());
+    }
+
+    static NAN_METHOD(NodeCount) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        info.GetReturnValue().Set(obj->dawg_.node_count());
     }
 
     static inline Nan::Persistent<v8::Function> & constructor() {
