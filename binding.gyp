@@ -9,11 +9,10 @@
             "<!(node -e \"require('nan')\")"
       ],
       "cflags": ["-std=c++11", "-O3"],
-      'cflags_cc!': [ '-fno-exceptions', '-Os' ],
+      'cflags_cc!': ['-Os'],
       'conditions': [
         ['OS=="mac"', {
           'xcode_settings': {
-            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             'OTHER_CFLAGS': ['-O3'],
             'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++', '-O3'],
             'OTHER_LDFLAGS': ['-stdlib=libc++'],

@@ -74,12 +74,6 @@ class DawgNodeCheckEntry {
         std::shared_ptr<DawgNode> child;
 };
 
-class OutOfOrderException: public std::exception {
-    virtual const char* what() const throw() {
-        return "Error: Words must be inserted in alphabetical order";
-    }
-} OutOfOrder;
-
 class Dawg {
     public:
         std::string previous_word;
@@ -105,7 +99,7 @@ Dawg::Dawg(void) {
 
 bool Dawg::insert(std::string word) {
     if (word <= this->previous_word) {
-        throw OutOfOrder;
+        return false;
     }
 
     // find common prefix between word and previous word
