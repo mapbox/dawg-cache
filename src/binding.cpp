@@ -21,6 +21,7 @@ class JSDawg : public Nan::ObjectWrap {
             SetPrototypeMethod(tpl, "insert", Insert);
             SetPrototypeMethod(tpl, "finish", Finish);
             SetPrototypeMethod(tpl, "lookup", Lookup);
+            SetPrototypeMethod(tpl, "lookupPrefix", LookupPrefix);
             SetPrototypeMethod(tpl, "edgeCount", EdgeCount);
             SetPrototypeMethod(tpl, "nodeCount", NodeCount);
 
@@ -68,6 +69,15 @@ class JSDawg : public Nan::ObjectWrap {
         String::Utf8Value utf8_value(info[0].As<String>());
         std::string input = std::string(*utf8_value, utf8_value.length());
         bool found = obj->dawg_.lookup(input);
+
+        info.GetReturnValue().Set(found);
+    }
+
+    static NAN_METHOD(LookupPrefix) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        String::Utf8Value utf8_value(info[0].As<String>());
+        std::string input = std::string(*utf8_value, utf8_value.length());
+        bool found = obj->dawg_.lookup_prefix(input);
 
         info.GetReturnValue().Set(found);
     }

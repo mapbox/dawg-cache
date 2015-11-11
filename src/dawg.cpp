@@ -85,6 +85,7 @@ class Dawg {
         bool insert(std::string word);
         void finish();
         bool lookup(std::string word);
+        bool lookup_prefix(std::string word);
         uint edge_count();
         uint node_count();
     private:
@@ -194,6 +195,22 @@ bool Dawg::lookup(std::string word) {
         return true;
     }
     return false;
+}
+
+bool Dawg::lookup_prefix(std::string word) {
+    std::shared_ptr<DawgNode> node = this->root;
+
+    char letter;
+    for (uint i = 0; i < word.length(); i++) {
+        letter = word[i];
+        if (node->edges.count(letter) == 0) {
+            return false;
+        } else {
+            node = node->edges[letter];
+        }
+    }
+
+    return true;
 }
 
 uint Dawg::node_count() {
