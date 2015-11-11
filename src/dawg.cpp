@@ -133,7 +133,7 @@ bool Dawg::insert(std::string word) {
     }
 
     DawgNodeCheckEntry check_entry;
-    for (int i = common_prefix; i < word.length(); i++) {
+    for (size_t i = common_prefix; i < word.length(); i++) {
         char letter = word[i];
 
         std::shared_ptr<DawgNode> next_node = std::make_shared<DawgNode>();

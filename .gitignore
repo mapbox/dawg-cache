@@ -1,3 +1,7 @@
 *.txt
 *.dawg
 *.bin
+build
+node_modules
+npm-debug.log
+lib/*

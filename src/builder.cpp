@@ -44,7 +44,7 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
         i++;
     }
 
-    for (int i = 0; i < nodes_to_process.size(); i++) {
+    for (size_t i = 0; i < nodes_to_process.size(); i++) {
         write_node(nodes_to_process[i], output, edge_locs, node_locs);
     }
 }
@@ -95,7 +95,7 @@ bool build_dawg(std::istream *input_stream, std::ostream *output_stream, bool ve
         cout << "Rewriting offsets...\n";
     }
 
-    for (int i = 0; i < edge_locs.size(); i++) {
+    for (size_t i = 0; i < edge_locs.size(); i++) {
         unsigned int edge_offset = edge_locs[i];
 
         int node_id;

@@ -1,0 +1,23 @@
+{
+  "name": "jsdawg",
+  "version": "0.0.1",
+  "description": "Javascript/C++ DAWG implementation",
+  "main": "jsdawg.js",
+  "private": true,
+  "gypfile": true,
+  "dependencies": {
+    "nan": "*",
+    "node-pre-gyp": "0.5.x"
+  },
+  "scripts": {
+    "install": "node-pre-gyp install --fallback-to-build"
+  },
+  "bundledDependencies":["node-pre-gyp"],
+  "binary": {
+    "module_name": "jsdawg",
+    "module_path": "./lib/",
+    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "remote_path": "./{name}/v{version}",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
+  }
+}
