@@ -1,6 +1,6 @@
 #include <nan.h>
 #include <string>
-#include "build_dawg.cpp"
+#include "builder.cpp"
 
 using v8::FunctionTemplate;
 using v8::Handle;
@@ -10,6 +10,10 @@ using Nan::GetFunction;
 using Nan::New;
 using Nan::Set;
 using Nan::ObjectWrap;
+
+void free_dawg_vector(char* data, void* hint) {
+    delete (std::vector<unsigned char>*)hint;
+}
 
 class JSDawg : public Nan::ObjectWrap {
     public:
@@ -24,6 +28,7 @@ class JSDawg : public Nan::ObjectWrap {
             SetPrototypeMethod(tpl, "lookupPrefix", LookupPrefix);
             SetPrototypeMethod(tpl, "edgeCount", EdgeCount);
             SetPrototypeMethod(tpl, "nodeCount", NodeCount);
+            SetPrototypeMethod(tpl, "toCompactDawgBuffer", ToCompactDawg);
 
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
             Nan::Set(
@@ -90,6 +95,21 @@ class JSDawg : public Nan::ObjectWrap {
     static NAN_METHOD(NodeCount) {
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         info.GetReturnValue().Set(obj->dawg_.node_count());
+    }
+
+    static NAN_METHOD(ToCompactDawgBuffer) {
+        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+
+        std::vector<unsigned char>* output = new std::vector<unsigned char>();
+        build_compact_dawg(&(obj->dawg_), output, true);
+
+        Nan::MaybeLocal<v8::Object> out = Nan::NewBuffer(
+            (char*)(&((*output)[0])),
+            output->size(),
+            free_dawg_vector,
+            output
+        );
+        info.GetReturnValue().Set(out.ToLocalChecked());
     }
 
     static inline Nan::Persistent<v8::Function> & constructor() {
