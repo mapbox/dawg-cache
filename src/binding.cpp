@@ -28,7 +28,7 @@ class JSDawg : public Nan::ObjectWrap {
             SetPrototypeMethod(tpl, "lookupPrefix", LookupPrefix);
             SetPrototypeMethod(tpl, "edgeCount", EdgeCount);
             SetPrototypeMethod(tpl, "nodeCount", NodeCount);
-            SetPrototypeMethod(tpl, "toCompactDawgBuffer", ToCompactDawg);
+            SetPrototypeMethod(tpl, "toCompactDawgBuffer", ToCompactDawgBuffer);
 
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
             Nan::Set(
