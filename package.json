@@ -9,10 +9,18 @@
     "nan": "*",
     "node-pre-gyp": "0.5.x"
   },
+  "devDependencies": {
+    "collections": "^1.2.4",
+    "queue-async": "*",
+    "request": "*",
+    "tape": "4.2.2"
+  },
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build"
   },
-  "bundledDependencies":["node-pre-gyp"],
+  "bundledDependencies": [
+    "node-pre-gyp"
+  ],
   "binary": {
     "module_name": "jsdawg",
     "module_path": "./lib/",
