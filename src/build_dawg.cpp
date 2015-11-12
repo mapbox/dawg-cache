@@ -12,5 +12,5 @@ int main(int argc, char* argv[]) {
     infile.open(argv[1], std::fstream::in);
     outfile.open(argv[2], std::fstream::out | std::fstream::binary);
 
-    build_dawg(&infile, &outfile, true);
+    build_compact_dawg_full(&infile, &outfile, true);
 }

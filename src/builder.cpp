@@ -49,7 +49,40 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
     }
 }
 
-bool build_dawg(std::istream *input_stream, std::ostream *output_stream, bool verbose) {
+void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool verbose) {
+    std::vector<unsigned int> edge_locs;
+
+    // this maps from a dawgdic node index to an offset in the compressed DAWG
+    std::unordered_map<unsigned int, unsigned int> node_locs;
+
+    if (verbose) {
+        cout << "Starting serialization...\n";
+    }
+
+    write_node(dawg->root, output, &edge_locs, &node_locs);
+
+    if (verbose) {
+        cout << "Rewriting offsets...\n";
+    }
+
+    for (size_t i = 0; i < edge_locs.size(); i++) {
+        unsigned int edge_offset = edge_locs[i];
+
+        int node_id;
+        memcpy(&node_id, &((*output)[edge_offset + 1]), sizeof(unsigned int));
+
+        if (node_id == 0) {
+            continue;
+        }
+        memcpy(&((*output)[edge_offset + 1]), &node_locs[node_id], sizeof(unsigned int));
+    }
+
+    if (verbose) {
+        cout << "Done; generated " << output->size() << " bytes of output\n";
+    }
+}
+
+bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_stream, bool verbose) {
     Dawg dawg;
     std::string word;
     int word_count = 0;
@@ -80,33 +113,8 @@ bool build_dawg(std::istream *input_stream, std::ostream *output_stream, bool ve
     }
 
     std::vector<unsigned char> output;
-    std::vector<unsigned int> edge_locs;
 
-    // this maps from a dawgdic node index to an offset in the compressed DAWG
-    std::unordered_map<unsigned int, unsigned int> node_locs;
-
-    if (verbose) {
-        cout << "Starting serialization...\n";
-    }
-
-    write_node(dawg.root, &output, &edge_locs, &node_locs);
-
-    if (verbose) {
-        cout << "Rewriting offsets...\n";
-    }
-
-    for (size_t i = 0; i < edge_locs.size(); i++) {
-        unsigned int edge_offset = edge_locs[i];
-
-        int node_id;
-        memcpy(&node_id, &output[edge_offset + 1], sizeof(unsigned int));
-
-        if (node_id == 0) {
-            continue;
-        }
-        memcpy(&output[edge_offset + 1], &node_locs[node_id], sizeof(unsigned int));
-    }
-    cout << "Done; writing " << output.size() << " bytes of output\n";
+    build_compact_dawg(&dawg, &output, verbose);
 
     output_stream->write((const char*)&output[0], output.size());
 
