@@ -1,5 +1,18 @@
-module.exports = {};
-module.exports.CompactDawg = require("./compact_dawg");
+var binding = require("./lib/jsdawg.node");
 
-// make the full dawg implementation be lazy-loaded so C++ code isn't needed in production
-module.exports.__defineGetter__("Dawg", function() { return require("./full_dawg"); });
+binding.Dawg.prototype.toCompactDawg = function() {
+    return new CompactDawg(this.toCompactDawgBuffer());
+}
+
+var CompactDawg = function(buf) {
+    this.data = buf;
+}
+
+CompactDawg.prototype.lookupPrefix = function(prefix) {
+    return binding.compactDawgBufferLookupPrefix(this.data, prefix);
+}
+
+module.exports = {
+    Dawg: binding.Dawg,
+    CompactDawg: CompactDawg
+};

@@ -17,7 +17,7 @@ void free_dawg_vector(char* data, void* hint) {
 
 class JSDawg : public Nan::ObjectWrap {
     public:
-        static NAN_MODULE_INIT(Init) {
+        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
             v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
             tpl->SetClassName(Nan::New("Dawg").ToLocalChecked());
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
@@ -118,4 +118,67 @@ class JSDawg : public Nan::ObjectWrap {
     }
 };
 
-NODE_MODULE(jsdawg, JSDawg::Init)
+NAN_METHOD(CompactLookupPrefix) {
+    v8::Local<v8::Object> bufferObj = info[0]->ToObject();
+    String::Utf8Value utf8_value(info[1].As<String>());
+
+    unsigned char* search = (unsigned char*) *utf8_value;
+    size_t search_length = utf8_value.length();
+
+    unsigned char* data = (unsigned char*) node::Buffer::Data(bufferObj);
+
+    int node_offset = 0, edge_count, edge_offset, min, max, guess;
+    bool match = false;
+    char search_letter, letter;
+
+    for (size_t i = 0; i < search_length; i++) {
+        // binary search over the node edges
+        match = false;
+        search_letter = search[i];
+
+        if (node_offset != -1) {
+            edge_count = (int) data[node_offset];
+
+            min = 0;
+            max = edge_count - 1;
+
+            while (min <= max) {
+                guess = (min + max) >> 1;
+                edge_offset = node_offset + 1 + (5 * guess);
+                letter = data[edge_offset];
+                if (letter == search_letter) {
+                    match = true;
+                    break;
+                }
+                else {
+                    if (letter < search_letter) {
+                        min = guess + 1;
+                    } else {
+                        max = guess - 1;
+                    }
+                }
+            }
+        }
+        if (match) {
+            memcpy(&node_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+            if (node_offset == 0) node_offset = -1;
+        } else {
+            info.GetReturnValue().Set(false);
+            return;
+        }
+    }
+
+    info.GetReturnValue().Set(true);
+    return;
+}
+
+static NAN_MODULE_INIT(Init) {
+    JSDawg::Init(target);
+    Nan::Set(
+        target,
+        Nan::New("compactDawgBufferLookupPrefix").ToLocalChecked(),
+        Nan::GetFunction(New<FunctionTemplate>(CompactLookupPrefix)).ToLocalChecked()
+    );
+}
+
+NODE_MODULE(jsdawg, Init)
