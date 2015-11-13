@@ -68,6 +68,9 @@ test('DAWG test', function (t) {
         }
         t.assert(prefixLookup, "dawg does not contain prefixes of all words as terms");
 
+        t.assert(!dawg.lookup(""), "dawg does not contain the empty string as a term");
+        t.assert(dawg.lookupPrefix(""), "dawg does contain the empty string as a prefix");
+
         callback();
     });
 
@@ -113,6 +116,9 @@ test('DAWG test', function (t) {
             prefixLookup = prefixLookup && (!compactDawg.lookup(prefix));
         }
         t.assert(prefixLookup, "compact dawg does not contain prefixes of all words as terms");
+
+        t.assert(!compactDawg.lookup(""), "compact dawg does not contain the empty string as a term");
+        t.assert(compactDawg.lookupPrefix(""), "compact dawg does contain the empty string as a prefix");
 
         callback();
     })

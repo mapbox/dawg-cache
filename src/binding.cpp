@@ -127,7 +127,7 @@ NAN_METHOD(CompactLookup) {
 
     unsigned char* data = (unsigned char*) node::Buffer::Data(bufferObj);
 
-    unsigned int flagged_offset, node_final;
+    unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, edge_count, edge_offset, min, max, guess;
     bool match = false;
     char search_letter, letter;
