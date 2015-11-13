@@ -9,7 +9,11 @@ var CompactDawg = function(buf) {
 }
 
 CompactDawg.prototype.lookupPrefix = function(prefix) {
-    return binding.compactDawgBufferLookupPrefix(this.data, prefix);
+    return binding.compactDawgBufferLookup(this.data, prefix) != 0;
+}
+
+CompactDawg.prototype.lookup = function(prefix) {
+    return binding.compactDawgBufferLookup(this.data, prefix) == 2;
 }
 
 module.exports = {

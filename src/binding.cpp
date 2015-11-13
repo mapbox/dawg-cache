@@ -118,7 +118,7 @@ class JSDawg : public Nan::ObjectWrap {
     }
 };
 
-NAN_METHOD(CompactLookupPrefix) {
+NAN_METHOD(CompactLookup) {
     v8::Local<v8::Object> bufferObj = info[0]->ToObject();
     String::Utf8Value utf8_value(info[1].As<String>());
 
@@ -127,6 +127,7 @@ NAN_METHOD(CompactLookupPrefix) {
 
     unsigned char* data = (unsigned char*) node::Buffer::Data(bufferObj);
 
+    unsigned int flagged_offset, node_final;
     int node_offset = 0, edge_count, edge_offset, min, max, guess;
     bool match = false;
     char search_letter, letter;
@@ -160,15 +161,19 @@ NAN_METHOD(CompactLookupPrefix) {
             }
         }
         if (match) {
-            memcpy(&node_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+            memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+
+            node_offset = (int)(flagged_offset & FINAL_MASK);
+            node_final = flagged_offset & IS_FINAL_FLAG;
+
             if (node_offset == 0) node_offset = -1;
         } else {
-            info.GetReturnValue().Set(false);
+            info.GetReturnValue().Set(0);
             return;
         }
     }
 
-    info.GetReturnValue().Set(true);
+    info.GetReturnValue().Set(node_final ? 2 : 1);
     return;
 }
 
@@ -176,8 +181,8 @@ static NAN_MODULE_INIT(Init) {
     JSDawg::Init(target);
     Nan::Set(
         target,
-        Nan::New("compactDawgBufferLookupPrefix").ToLocalChecked(),
-        Nan::GetFunction(New<FunctionTemplate>(CompactLookupPrefix)).ToLocalChecked()
+        Nan::New("compactDawgBufferLookup").ToLocalChecked(),
+        Nan::GetFunction(New<FunctionTemplate>(CompactLookup)).ToLocalChecked()
     );
 }
 

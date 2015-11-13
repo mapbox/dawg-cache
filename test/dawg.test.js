@@ -75,6 +75,12 @@ test('DAWG test', function (t) {
         var compactDawg = dawg.toCompactDawg();
         t.pass("compact dawg created")
 
+        var exactLookup = true;
+        for (var i = 0; i < words.length; i++) {
+            exactLookup = exactLookup && compactDawg.lookup(words[i]);
+        }
+        t.assert(exactLookup, "compact dawg contains all words");
+
         var prefixLookup = true;
         for (var i = 0; i < words.length; i++) {
             prefixLookup = prefixLookup && compactDawg.lookupPrefix(words[i]);
@@ -92,9 +98,21 @@ test('DAWG test', function (t) {
 
         var lookupFailure = true;
         for (var i = 0; i < words.length; i++) {
+            lookupFailure = lookupFailure && (!compactDawg.lookup(words[i]) + "q");
             lookupFailure = lookupFailure && (!compactDawg.lookupPrefix(words[i]) + "q");
         }
-        t.assert(lookupFailure, "compact dawg does not contain any words with 'q' added to the end as prefix");
+        t.assert(lookupFailure, "compact dawg does not contain any words with 'q' added to the end as term or prefix");
+
+        var prefixLookup = true;
+        for (var i = 0; i < words.length; i++) {
+            if (words[i].length == 1) continue;
+
+            var prefix = words[i].substring(0, words[i].length - 1);
+            // if this prefix is also a word, skip
+            if (wordSet.contains(prefix)) continue;
+            prefixLookup = prefixLookup && (!compactDawg.lookup(prefix));
+        }
+        t.assert(prefixLookup, "compact dawg does not contain prefixes of all words as terms");
 
         callback();
     })

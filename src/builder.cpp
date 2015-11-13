@@ -6,6 +6,10 @@
 
 using namespace std;
 
+const unsigned int IS_FINAL_FLAG = 0x80000000;
+const unsigned int NOT_FINAL_FLAG = 0;
+const unsigned int FINAL_MASK = 0x7fffffff;
+
 void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, std::vector<unsigned int>* edge_locs, std::unordered_map<unsigned int, unsigned int>* node_locs) {
     if (node_locs->count(node->id) > 0) {
         // already visited
@@ -25,7 +29,7 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
         child = it->second;
 
         int edge_offset = (i * 5) + offset + 1;
-        unsigned int node_id;
+        unsigned int node_id, flagged_id;
 
         if (child->edges.size() == 0) {
             node_id = 0;
@@ -34,11 +38,13 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
             node_id = child->id;
         }
 
+        flagged_id = (node_id & FINAL_MASK) | (child->final ? IS_FINAL_FLAG : NOT_FINAL_FLAG);
+
         output->push_back(edge_key);
 
         int cur_size = output->size();
         output->resize(cur_size + sizeof(unsigned int));
-        memcpy(&((*output)[cur_size]), &node_id, sizeof(unsigned int));
+        memcpy(&((*output)[cur_size]), &flagged_id, sizeof(unsigned int));
 
         edge_locs->push_back(edge_offset);
         i++;
@@ -68,13 +74,19 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
     for (size_t i = 0; i < edge_locs.size(); i++) {
         unsigned int edge_offset = edge_locs[i];
 
-        int node_id;
-        memcpy(&node_id, &((*output)[edge_offset + 1]), sizeof(unsigned int));
+        unsigned int flagged_id;
+        memcpy(&flagged_id, &((*output)[edge_offset + 1]), sizeof(unsigned int));
+
+        unsigned int node_id = flagged_id & FINAL_MASK;
 
         if (node_id == 0) {
             continue;
         }
-        memcpy(&((*output)[edge_offset + 1]), &node_locs[node_id], sizeof(unsigned int));
+
+        // copy the flag bit from node_id to the offset
+        int flagged_offset = (node_locs[node_id] & FINAL_MASK) | (flagged_id & IS_FINAL_FLAG);
+
+        memcpy(&((*output)[edge_offset + 1]), &flagged_offset, sizeof(unsigned int));
     }
 
     if (verbose) {
