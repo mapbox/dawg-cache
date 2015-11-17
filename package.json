@@ -1,8 +1,8 @@
 {
-  "name": "jsdawg",
+  "name": "dawg-cache",
   "version": "0.0.1",
   "description": "Javascript/C++ DAWG implementation",
-  "main": "jsdawg.js",
+  "main": "index.js",
   "private": true,
   "gypfile": true,
   "dependencies": {

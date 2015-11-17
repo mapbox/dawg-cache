@@ -4,7 +4,7 @@ var queue = require('queue-async');
 var zlib = require('zlib');
 require('collections/collections.js');
 
-var jsdawg = require("../jsdawg");
+var jsdawg = require("../index");
 
 test('DAWG test', function (t) {
     var q = queue(1);
