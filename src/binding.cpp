@@ -101,7 +101,7 @@ class JSDawg : public Nan::ObjectWrap {
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
 
         std::vector<unsigned char>* output = new std::vector<unsigned char>();
-        build_compact_dawg(&(obj->dawg_), output, true);
+        build_compact_dawg(&(obj->dawg_), output, false);
 
         Nan::MaybeLocal<v8::Object> out = Nan::NewBuffer(
             (char*)(&((*output)[0])),
@@ -125,7 +125,8 @@ NAN_METHOD(CompactLookup) {
     unsigned char* search = (unsigned char*) *utf8_value;
     size_t search_length = utf8_value.length();
 
-    unsigned char* data = (unsigned char*) node::Buffer::Data(bufferObj);
+    unsigned char* full_data = (unsigned char*) node::Buffer::Data(bufferObj);
+    unsigned char* data = full_data + DAWG_HEADER_SIZE;
 
     unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, edge_count, edge_offset, min, max, guess;

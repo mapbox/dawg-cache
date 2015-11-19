@@ -1,11 +1,12 @@
 {
   "name": "dawg-cache",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Javascript/C++ DAWG implementation",
   "main": "index.js",
   "private": true,
   "gypfile": true,
   "dependencies": {
+    "fast-crc32c": "^1.0.1",
     "nan": "*",
     "node-pre-gyp": "0.5.x"
   },

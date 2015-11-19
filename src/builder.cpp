@@ -3,12 +3,26 @@
 #include <unordered_map>
 #include <memory>
 #include "dawg.cpp"
+#include "crc32c.hpp"
 
 using namespace std;
 
 const unsigned int IS_FINAL_FLAG = 0x80000000;
 const unsigned int NOT_FINAL_FLAG = 0;
 const unsigned int FINAL_MASK = 0x7fffffff;
+
+const unsigned int DAWG_HEADER_SIZE = 16;
+
+/* header format 16 bytes, consisting of:
+    * the string "dawg" (4 bytes)
+    * version number (1 byte) - currently 1
+    * size in bytes of each character (1 byte) - currently always 1
+    * size in bytes of each edge count (1 byte) - currently always 1
+    * size in bytes of each node offset (1 byte) - currently always 4
+    * size in bytes of the datastructure (does not include this header)
+    * the crc32c checksum of the datastructure (does not include this header)
+*/
+const char* DAWG_DEFAULT_HEADER = "dawg\x01\x01\x01\x04\0\0\0\0\0\0\0\0";
 
 void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, std::vector<unsigned int>* edge_locs, std::unordered_map<unsigned int, unsigned int>* node_locs) {
     if (node_locs->count(node->id) > 0) {
@@ -56,6 +70,10 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
 }
 
 void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool verbose) {
+    // write the header
+    output->resize(output->size() + DAWG_HEADER_SIZE);
+    memcpy(&((*output)[0]), DAWG_DEFAULT_HEADER, DAWG_HEADER_SIZE);
+
     std::vector<unsigned int> edge_locs;
 
     // this maps from a dawgdic node index to an offset in the compressed DAWG
@@ -83,11 +101,23 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
             continue;
         }
 
+        unsigned int adjusted_loc = node_locs[node_id] - DAWG_HEADER_SIZE;
+
         // copy the flag bit from node_id to the offset
-        int flagged_offset = (node_locs[node_id] & FINAL_MASK) | (flagged_id & IS_FINAL_FLAG);
+        int flagged_offset = (adjusted_loc & FINAL_MASK) | (flagged_id & IS_FINAL_FLAG);
 
         memcpy(&((*output)[edge_offset + 1]), &flagged_offset, sizeof(unsigned int));
     }
+
+    if (verbose) {
+        cout << "Rewriting metadata\n";
+    }
+
+    unsigned int data_size = ((unsigned int) output->size()) - DAWG_HEADER_SIZE;
+    memcpy(&((*output)[8]), &data_size, sizeof(unsigned int));
+
+    unsigned int checksum = crc32c(&((*output)[DAWG_HEADER_SIZE]), data_size);
+    memcpy(&((*output)[12]), &checksum, sizeof(unsigned int));
 
     if (verbose) {
         cout << "Done; generated " << output->size() << " bytes of output\n";
