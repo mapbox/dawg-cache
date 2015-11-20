@@ -17,7 +17,8 @@
     "tape": "4.2.2"
   },
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build"
+    "install": "node-pre-gyp install --fallback-to-build",
+    "test": "tape test/*.test.js"
   },
   "bundledDependencies": [
     "node-pre-gyp"
