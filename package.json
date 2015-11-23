@@ -1,6 +1,6 @@
 {
   "name": "dawg-cache",
-  "version": "0.1.0",
+  "version": "0.1.0-dev1",
   "description": "Javascript/C++ DAWG implementation",
   "main": "index.js",
   "private": true,
@@ -17,7 +17,8 @@
     "tape": "4.2.2"
   },
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build"
+    "install": "node-pre-gyp install --fallback-to-build",
+    "test": "tape test/*.test.js"
   },
   "bundledDependencies": [
     "node-pre-gyp"
