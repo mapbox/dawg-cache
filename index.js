@@ -1,5 +1,4 @@
 var binding = require("./lib/jsdawg.node");
-var crc32c = require("fast-crc32c");
 var assert = require("assert");
 
 binding.Dawg.prototype.toCompactDawg = function() {
@@ -20,7 +19,7 @@ var CompactDawg = function(buf) {
 
     var structure = buf.slice(16);
     var actualSize = structure.length;
-    var actualChecksum = crc32c.calculate(structure, 0);
+    var actualChecksum = binding.crc32c(structure);
 
     assert(magic == "dawg", "dawg magic phrase is incorrect");
     assert(version == 1, "dawg version should be 1");

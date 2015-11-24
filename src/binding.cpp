@@ -178,12 +178,37 @@ NAN_METHOD(CompactLookup) {
     return;
 }
 
+NAN_METHOD(Crc32c) {
+    Nan::HandleScope scope;
+    uint32_t crc;
+
+    if (info.Length() != 1) {
+        Nan::ThrowTypeError("Invalid number of arguments");
+        return;
+    }
+
+    if (node::Buffer::HasInstance(info[0])) {
+        v8::Local<v8::Object> buf = info[0]->ToObject();
+        crc = crc32c((const char *)node::Buffer::Data(buf), (size_t)node::Buffer::Length(buf));
+    } else {
+        Nan::ThrowTypeError("Input must be a buffer");
+        return;
+    }
+
+    info.GetReturnValue().Set(Nan::New<v8::Uint32>(crc));
+}
+
 static NAN_MODULE_INIT(Init) {
     JSDawg::Init(target);
     Nan::Set(
         target,
         Nan::New("compactDawgBufferLookup").ToLocalChecked(),
         Nan::GetFunction(New<FunctionTemplate>(CompactLookup)).ToLocalChecked()
+    );
+    Nan::Set(
+        target,
+        Nan::New("crc32c").ToLocalChecked(),
+        Nan::GetFunction(New<FunctionTemplate>(Crc32c)).ToLocalChecked()
     );
 }
 
