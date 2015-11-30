@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "Javascript/C++ DAWG implementation",
   "main": "index.js",
-  "private": true,
+  "private": false,
   "gypfile": true,
   "dependencies": {
     "nan": "*",
