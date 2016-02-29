@@ -271,7 +271,7 @@ class CompactIterator : public Nan::ObjectWrap {
             next_offset = (int)(flagged_offset & FINAL_MASK);
             next_final = flagged_offset & IS_FINAL_FLAG;
 
-            if (next_final) {
+            if (next_final && !current_position.visited) {
                 has_output = true;
                 output = std::string(current_word->begin(), current_word->end()) + letter;
             }

@@ -2,6 +2,7 @@ var test = require('tape');
 var request = require('request');
 var queue = require('queue-async');
 var zlib = require('zlib');
+var forOf = require('es6-iterator/for-of');
 require('collections/collections.js');
 
 var jsdawg = require("../index");
@@ -98,6 +99,14 @@ test('DAWG test', function (t) {
             prefixLookup = prefixLookup && compactDawg.lookupPrefix(prefix);
         }
         t.assert(prefixLookup, "compact dawg contains prefixes of all words as prefixes");
+
+        var compactDawgWords = [];
+        forOf(compactDawg, function(value) { compactDawgWords.push(value); });
+        var iteratorLookup = true;
+        for (var i = 0; i < words.length; i++) {
+            iteratorLookup = iteratorLookup && (words[i] == compactDawgWords[i]);
+        }
+        t.assert(iteratorLookup, "compact dawg iterator reproduces original list");
 
         var lookupFailure = true;
         for (var i = 0; i < words.length; i++) {
