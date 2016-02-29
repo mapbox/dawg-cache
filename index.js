@@ -38,6 +38,17 @@ CompactDawg.prototype.lookup = function(prefix) {
     return binding.compactDawgBufferLookup(this.data, prefix) == 2;
 }
 
+CompactDawg.prototype.iterator = function(prefix) {
+    // implement the ES6 iterator pattern
+    var it = binding.CompactDawgIterator(this.data);
+    return {
+        next: function() {
+            var n = it.next();
+            return {value: n, done: n === undefined};
+        }
+    }
+}
+
 module.exports = {
     Dawg: binding.Dawg,
     CompactDawg: CompactDawg
