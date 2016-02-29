@@ -7,7 +7,9 @@
   "gypfile": true,
   "dependencies": {
     "nan": "*",
-    "node-pre-gyp": "0.5.x"
+    "node-pre-gyp": "0.5.x",
+    "es6-symbol": "3.0.2",
+    "es6-iterator": "2.0.0"
   },
   "devDependencies": {
     "collections": "^1.2.4",

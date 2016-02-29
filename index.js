@@ -1,5 +1,6 @@
 var binding = require("./lib/jsdawg.node");
 var assert = require("assert");
+var Symbol = require("es6-symbol");
 
 binding.Dawg.prototype.toCompactDawg = function() {
     return new CompactDawg(this.toCompactDawgBuffer());
@@ -48,6 +49,8 @@ CompactDawg.prototype.iterator = function(prefix) {
         }
     }
 }
+
+CompactDawg.prototype[Symbol.iterator] = CompactDawg.prototype.iterator;
 
 module.exports = {
     Dawg: binding.Dawg,
