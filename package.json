@@ -15,7 +15,8 @@
     "collections": "^1.2.4",
     "queue-async": "*",
     "request": "*",
-    "tape": "4.2.2"
+    "tape": "4.2.2",
+    "minimist": "1.2.0"
   },
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
