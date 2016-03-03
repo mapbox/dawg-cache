@@ -259,9 +259,6 @@ class CompactIterator : public Nan::ObjectWrap {
         bool has_output = false;
 
         while (stack->size() > 0 && !has_output) {
-            // if the stack is empty, we're done
-            if (!stack->size()) break;
-
             current_position = stack->back();
 
             edge_offset = current_position.node_offset + 1 + (5 * current_position.edge_idx);
@@ -279,10 +276,12 @@ class CompactIterator : public Nan::ObjectWrap {
             if (next_offset == 0 || current_position.visited) {
                 stack->pop_back();
 
-                new_back = stack->back();
-                new_back.visited = true;
-                stack->pop_back();
-                stack->push_back(new_back);
+                if (stack->size() > 0) {
+                    new_back = stack->back();
+                    new_back.visited = true;
+                    stack->pop_back();
+                    stack->push_back(new_back);
+                }
 
                 edge_count = (int) data[current_position.node_offset];
                 if (current_position.edge_idx < edge_count - 1) {
