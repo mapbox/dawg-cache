@@ -1,6 +1,7 @@
 var binding = require("./lib/jsdawg.node");
 var assert = require("assert");
 var Symbol = require("es6-symbol");
+var JSIterator = require("./lib/iterator")
 
 binding.Dawg.prototype.toCompactDawg = function() {
     return new CompactDawg(this.toCompactDawgBuffer());
@@ -41,7 +42,7 @@ CompactDawg.prototype.lookup = function(prefix) {
 
 CompactDawg.prototype.iterator = function(prefix) {
     // implement the ES6 iterator pattern
-    var it = binding.CompactDawgIterator(this.data);
+    var it = new JSIterator(this.data);
     return {
         next: function() {
             var n = it.next();
