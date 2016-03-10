@@ -202,7 +202,7 @@ class CompactIterator : public Nan::ObjectWrap {
         }
     private:
         explicit CompactIterator() {}
-        ~CompactIterator() {}
+        ~CompactIterator() { persistentBuffer.Reset(); }
         Nan::Persistent<v8::Object> persistentBuffer;
         unsigned char* data;
         std::vector<node_position>* stack;
@@ -210,7 +210,19 @@ class CompactIterator : public Nan::ObjectWrap {
 
     static NAN_METHOD(New) {
         if (info.IsConstructCall()) {
-            v8::Local<v8::Object> bufferObj = info[0]->ToObject();
+            if (info.Length() != 1) {
+                Nan::ThrowTypeError("Invalid number of arguments");
+                return;
+            }
+
+            v8::Local<v8::Object> bufferObj;
+            if (node::Buffer::HasInstance(info[0])) {
+                bufferObj = info[0]->ToObject();
+            } else {
+                Nan::ThrowTypeError("Input must be a buffer");
+                return;
+            }
+
             CompactIterator *obj = new CompactIterator();
             obj->Wrap(info.This());
             // store the buffer as a persistent
@@ -235,12 +247,6 @@ class CompactIterator : public Nan::ObjectWrap {
             v8::Local<v8::Function> cons = Nan::New(constructor());
             info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
         }
-    }
-
-    static NAN_METHOD(Finish) {
-        CompactIterator* obj = Nan::ObjectWrap::Unwrap<CompactIterator>(info.This());
-        // release the persistent to the buffer
-        obj->persistentBuffer.Reset();
     }
 
     static NAN_METHOD(Next) {
