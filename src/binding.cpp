@@ -229,8 +229,8 @@ class CompactIterator : public Nan::ObjectWrap {
         ~CompactIterator() { persistentBuffer.Reset(); }
         Nan::Persistent<v8::Object> persistentBuffer;
         unsigned char* data;
-        std::vector<node_position>* stack;
-        std::vector<unsigned char>* current_word;
+        std::vector<node_position> stack;
+        std::vector<unsigned char> current_word;
         bool return_empty;
 
     static NAN_METHOD(New) {
@@ -256,8 +256,6 @@ class CompactIterator : public Nan::ObjectWrap {
 
             unsigned char* full_data = (unsigned char*) node::Buffer::Data(bufferObj);
             obj->data = full_data + DAWG_HEADER_SIZE;
-            obj->current_word = new std::vector<unsigned char>();
-            obj->stack = new std::vector<node_position>();
             obj->return_empty = false;
 
             node_position current_position;
@@ -280,7 +278,7 @@ class CompactIterator : public Nan::ObjectWrap {
                         current_position.edge_idx = 0;
                         current_position.visited = false;
 
-                        obj->stack->push_back(current_position);
+                        obj->stack.push_back(current_position);
                     }
                 }
             } else {
@@ -289,7 +287,7 @@ class CompactIterator : public Nan::ObjectWrap {
                 current_position.edge_idx = 0;
                 current_position.visited = false;
 
-                obj->stack->push_back(current_position);
+                obj->stack.push_back(current_position);
             }
         } else {
             Nan::ThrowTypeError("CompactDawgIterator needs to be called as a constructor");
@@ -306,8 +304,8 @@ class CompactIterator : public Nan::ObjectWrap {
         }
 
         unsigned char* data = obj->data;
-        std::vector<node_position>* stack = obj->stack;
-        std::vector<unsigned char>* current_word = obj->current_word;
+        std::vector<node_position>* stack = &(obj->stack);
+        std::vector<unsigned char>* current_word = &(obj->current_word);
 
         unsigned int flagged_offset, next_final = 0;
         unsigned int next_offset = 0, edge_count, edge_offset;
