@@ -76,6 +76,7 @@ test('DAWG test', function (t) {
     });
 
     q.defer(function(callback) {
+        dawg.finish();
         var compactDawg = dawg.toCompactDawg();
         t.pass("compact dawg created")
 
