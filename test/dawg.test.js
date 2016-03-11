@@ -109,6 +109,35 @@ test('DAWG test', function (t) {
         }
         t.assert(iteratorLookup, "compact dawg iterator reproduces original list");
 
+        var prefixWords = [];
+        var prefixIterator = compactDawg.iterator("test");
+        var priNext = prefixIterator.next();
+        while (!priNext.done) {
+            prefixWords.push(priNext.value);
+            priNext = prefixIterator.next();
+        }
+        t.assert(prefixWords.length == 82, "got 82 results for prefix 'test'");
+        t.assert(prefixWords.indexOf("test") == 0, "submitted prefix 'test' is included in results");
+
+        var prefixWords = [];
+        var prefixIterator = compactDawg.iterator("testac");
+        var priNext = prefixIterator.next();
+        while (!priNext.done) {
+            prefixWords.push(priNext.value);
+            priNext = prefixIterator.next();
+        }
+        t.assert(prefixWords.length == 7, "got 7 results for prefix 'testac'");
+        t.assert(prefixWords.indexOf("testac") == -1, "submitted prefix 'testac' is not included in results");
+
+        var prefixWords = [];
+        var prefixIterator = compactDawg.iterator("testaaa");
+        var priNext = prefixIterator.next();
+        while (!priNext.done) {
+            prefixWords.push(priNext.value);
+            priNext = prefixIterator.next();
+        }
+        t.assert(prefixWords.length == 0, "got 0 results for prefix 'testaaa'");
+
         var lookupFailure = true;
         for (var i = 0; i < words.length; i++) {
             lookupFailure = lookupFailure && (!compactDawg.lookup(words[i]) + "q");

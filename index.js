@@ -41,12 +41,19 @@ CompactDawg.prototype.lookup = function(prefix) {
 
 CompactDawg.prototype.iterator = function(prefix) {
     // implement the ES6 iterator pattern
-    var it = binding.CompactDawgIterator(this.data);
+    var it = prefix ? new binding.CompactDawgIterator(this.data, prefix) : new binding.CompactDawgIterator(this.data);
     return {
-        next: function() {
-            var n = it.next();
-            return {value: n, done: n === undefined};
-        }
+        next: prefix ?
+            function() {
+                var n = it.next();
+                out = {done: n === undefined};
+                out.value = out.done ? n : prefix + n;
+                return out;
+            } :
+            function() {
+                var n = it.next();
+                return {value: n, done: n === undefined};
+            }
     }
 }
 
