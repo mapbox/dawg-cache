@@ -1,6 +1,6 @@
 {
   "name": "dawg-cache",
-  "version": "0.2.0-prefix",
+  "version": "0.3.0",
   "description": "Javascript/C++ DAWG implementation",
   "main": "index.js",
   "private": false,
