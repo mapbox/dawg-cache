@@ -1,19 +1,22 @@
 {
   "name": "dawg-cache",
-  "version": "0.2.0",
+  "version": "0.2.0-prefix",
   "description": "Javascript/C++ DAWG implementation",
   "main": "index.js",
   "private": false,
   "gypfile": true,
   "dependencies": {
     "nan": "*",
-    "node-pre-gyp": "0.5.x"
+    "node-pre-gyp": "0.5.x",
+    "es6-symbol": "3.0.2",
+    "es6-iterator": "2.0.0"
   },
   "devDependencies": {
     "collections": "^1.2.4",
     "queue-async": "*",
     "request": "*",
-    "tape": "4.2.2"
+    "tape": "4.2.2",
+    "minimist": "1.2.0"
   },
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",

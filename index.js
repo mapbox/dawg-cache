@@ -1,5 +1,6 @@
 var binding = require("./lib/jsdawg.node");
 var assert = require("assert");
+var Symbol = require("es6-symbol");
 
 binding.Dawg.prototype.toCompactDawg = function() {
     return new CompactDawg(this.toCompactDawgBuffer());
@@ -37,6 +38,26 @@ CompactDawg.prototype.lookupPrefix = function(prefix) {
 CompactDawg.prototype.lookup = function(prefix) {
     return binding.compactDawgBufferLookup(this.data, prefix) == 2;
 }
+
+CompactDawg.prototype.iterator = function(prefix) {
+    // implement the ES6 iterator pattern
+    var it = prefix ? new binding.CompactDawgIterator(this.data, prefix) : new binding.CompactDawgIterator(this.data);
+    return {
+        next: prefix ?
+            function() {
+                var n = it.next();
+                out = {done: n === undefined};
+                out.value = out.done ? n : prefix + n;
+                return out;
+            } :
+            function() {
+                var n = it.next();
+                return {value: n, done: n === undefined};
+            }
+    }
+}
+
+CompactDawg.prototype[Symbol.iterator] = CompactDawg.prototype.iterator;
 
 module.exports = {
     Dawg: binding.Dawg,
