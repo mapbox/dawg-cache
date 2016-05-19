@@ -39,6 +39,10 @@ CompactDawg.prototype.lookup = function(prefix) {
     return binding.compactDawgBufferLookup(this.data, prefix) == 2;
 }
 
+CompactDawg.prototype.prefixContinuations = function(prefix, maxDepth) {
+    return binding.prefixContinuations(this.data, prefix, maxDepth);
+}
+
 CompactDawg.prototype.iterator = function(prefix) {
     // implement the ES6 iterator pattern
     var it = prefix ? new binding.CompactDawgIterator(this.data, prefix) : new binding.CompactDawgIterator(this.data);

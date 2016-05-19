@@ -159,6 +159,23 @@ test('DAWG test', function (t) {
         t.assert(!compactDawg.lookup(""), "compact dawg does not contain the empty string as a term");
         t.assert(compactDawg.lookupPrefix(""), "compact dawg does contain the empty string as a prefix");
 
+        // hacky equivalently functional continuation calculator that just iterates over the array
+        var manualContinuations = function(prefix, maxDepth) {
+            if (prefix.length > maxDepth) return [];
+            var matches = words.filter(function(w) { return w.substring(0, prefix.length) == prefix });
+            var obj = {}
+            matches.forEach(function (w) {
+                obj[w.substr(0, maxDepth)] = true;
+            })
+            return Object.keys(obj).sort();
+        }
+
+        t.deepEqual(compactDawg.prefixContinuations("a", 3), manualContinuations("a", 3), "prefix continuations correctly calculated for ('a', 3)");
+        t.deepEqual(compactDawg.prefixContinuations("ab", 3), manualContinuations("ab", 3), "prefix continuations correctly calculated for ('ab', 3)");
+        t.deepEqual(compactDawg.prefixContinuations("aba", 3), ['aba'], "'aba' the sole prefix continuation result for ('aba', 3)")
+        t.deepEqual(compactDawg.prefixContinuations("abac", 3), [], "prefix continuation search returns no results for ('abac', 3) [too long]")
+        t.deepEqual(compactDawg.prefixContinuations("zz", 3), [], "prefix continuation search returns no results for ('zz', 3) [no match]")
+
         callback();
     })
 
