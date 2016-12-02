@@ -15,17 +15,21 @@ matrix:
      # Linux
      - os: linux
        compiler: clang
-       env: NODE_VERSION="0.10.38" # node abi 11
+       env: NODE_VERSION="0.10.38" PUBLISHABLE=true
      - os: linux
        compiler: clang
-       env: NODE_VERSION="4.4.2" # node abi 46
+       env: NODE_VERSION="4.4.2" PUBLISHABLE=true
+     # Debug build (only for testing)
+     - os: linux
+       compiler: clang
+       env: NODE_VERSION="4.4.2" NPM_FLAGS="--debug"
      # OS X
      - os: osx
        compiler: clang
-       env: NODE_VERSION="0.10.38" # node abi 11
+       env: NODE_VERSION="0.10.38" PUBLISHABLE=true
      - os: osx
        compiler: clang
-       env: NODE_VERSION="4.4.2" # node abi 46
+       env: NODE_VERSION="4.4.2" PUBLISHABLE=true
 
 env:
   global:
@@ -43,10 +47,10 @@ before_install:
   - nvm use $NODE_VERSION
 
 install:
-  - npm install --build-from-source --clang=1
+  - npm install --build-from-source --clang=1 ${NPM_FLAGS:-}
 
 script:
   - npm test
 
 after_success:
-  - ./test/travis-publish.sh
+  - if [[ ${PUBLISHABLE:-} == true ]]; then ./test/travis-publish.sh; fi
