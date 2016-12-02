@@ -77,105 +77,108 @@ test('DAWG test', function (t) {
 
     q.defer(function(callback) {
         dawg.finish();
-        var compactDawg = dawg.toCompactDawg();
-        t.pass("compact dawg created")
 
-        var exactLookup = true;
-        for (var i = 0; i < words.length; i++) {
-            exactLookup = exactLookup && compactDawg.lookup(words[i]);
-        }
-        t.assert(exactLookup, "compact dawg contains all words");
+        [false, true].forEach(function(preserveCounts) {
+            var compactDawg = dawg.toCompactDawg(preserveCounts);
+            var dawgLabel = preserveCounts ? "compact dawg with counts" : "compact dawg without counts";
+            t.pass(dawgLabel + " created; has size " + compactDawg.data.length);
 
-        var prefixLookup = true;
-        for (var i = 0; i < words.length; i++) {
-            prefixLookup = prefixLookup && compactDawg.lookupPrefix(words[i]);
-        }
-        t.assert(prefixLookup, "compact dawg contains all words as prefixes");
+            var exactLookup = true;
+            for (var i = 0; i < words.length; i++) {
+                exactLookup = exactLookup && compactDawg.lookup(words[i]);
+            }
+            t.assert(exactLookup, dawgLabel + " contains all words");
 
-        var prefixLookup = true;
-        for (var i = 0; i < words.length; i++) {
-            if (words[i].length == 1) continue;
+            var prefixLookup = true;
+            for (var i = 0; i < words.length; i++) {
+                prefixLookup = prefixLookup && compactDawg.lookupPrefix(words[i]);
+            }
+            t.assert(prefixLookup, dawgLabel + " contains all words as prefixes");
 
-            var prefix = words[i].substring(0, words[i].length - 1);
-            prefixLookup = prefixLookup && compactDawg.lookupPrefix(prefix);
-        }
-        t.assert(prefixLookup, "compact dawg contains prefixes of all words as prefixes");
+            var prefixLookup = true;
+            for (var i = 0; i < words.length; i++) {
+                if (words[i].length == 1) continue;
 
-        var compactDawgWords = [];
-        forOf(compactDawg, function(value) { compactDawgWords.push(value); });
-        var iteratorLookup = true;
-        for (var i = 0; i < words.length; i++) {
-            iteratorLookup = iteratorLookup && (words[i] == compactDawgWords[i]);
-        }
-        t.assert(iteratorLookup, "compact dawg iterator reproduces original list");
+                var prefix = words[i].substring(0, words[i].length - 1);
+                prefixLookup = prefixLookup && compactDawg.lookupPrefix(prefix);
+            }
+            t.assert(prefixLookup, dawgLabel + " contains prefixes of all words as prefixes");
 
-        var prefixWords = [];
-        var prefixIterator = compactDawg.iterator("test");
-        var priNext = prefixIterator.next();
-        while (!priNext.done) {
-            prefixWords.push(priNext.value);
-            priNext = prefixIterator.next();
-        }
-        t.assert(prefixWords.length == 82, "got 82 results for prefix 'test'");
-        t.assert(prefixWords.indexOf("test") == 0, "submitted prefix 'test' is included in results");
+            var compactDawgWords = [];
+            forOf(compactDawg, function(value) { compactDawgWords.push(value); });
+            var iteratorLookup = true;
+            for (var i = 0; i < words.length; i++) {
+                iteratorLookup = iteratorLookup && (words[i] == compactDawgWords[i]);
+            }
+            t.assert(iteratorLookup, dawgLabel + " iterator reproduces original list");
 
-        var prefixWords = [];
-        var prefixIterator = compactDawg.iterator("testac");
-        var priNext = prefixIterator.next();
-        while (!priNext.done) {
-            prefixWords.push(priNext.value);
-            priNext = prefixIterator.next();
-        }
-        t.assert(prefixWords.length == 7, "got 7 results for prefix 'testac'");
-        t.assert(prefixWords.indexOf("testac") == -1, "submitted prefix 'testac' is not included in results");
+            var prefixWords = [];
+            var prefixIterator = compactDawg.iterator("test");
+            var priNext = prefixIterator.next();
+            while (!priNext.done) {
+                prefixWords.push(priNext.value);
+                priNext = prefixIterator.next();
+            }
+            t.assert(prefixWords.length == 82, "got 82 results for prefix 'test'");
+            t.assert(prefixWords.indexOf("test") == 0, "submitted prefix 'test' is included in results");
 
-        var prefixWords = [];
-        var prefixIterator = compactDawg.iterator("testaaa");
-        var priNext = prefixIterator.next();
-        while (!priNext.done) {
-            prefixWords.push(priNext.value);
-            priNext = prefixIterator.next();
-        }
-        t.assert(prefixWords.length == 0, "got 0 results for prefix 'testaaa'");
+            var prefixWords = [];
+            var prefixIterator = compactDawg.iterator("testac");
+            var priNext = prefixIterator.next();
+            while (!priNext.done) {
+                prefixWords.push(priNext.value);
+                priNext = prefixIterator.next();
+            }
+            t.assert(prefixWords.length == 7, "got 7 results for prefix 'testac'");
+            t.assert(prefixWords.indexOf("testac") == -1, "submitted prefix 'testac' is not included in results");
 
-        var lookupFailure = true;
-        for (var i = 0; i < words.length; i++) {
-            lookupFailure = lookupFailure && (!compactDawg.lookup(words[i]) + "q");
-            lookupFailure = lookupFailure && (!compactDawg.lookupPrefix(words[i]) + "q");
-        }
-        t.assert(lookupFailure, "compact dawg does not contain any words with 'q' added to the end as term or prefix");
+            var prefixWords = [];
+            var prefixIterator = compactDawg.iterator("testaaa");
+            var priNext = prefixIterator.next();
+            while (!priNext.done) {
+                prefixWords.push(priNext.value);
+                priNext = prefixIterator.next();
+            }
+            t.assert(prefixWords.length == 0, "got 0 results for prefix 'testaaa'");
 
-        var prefixLookup = true;
-        for (var i = 0; i < words.length; i++) {
-            if (words[i].length == 1) continue;
+            var lookupFailure = true;
+            for (var i = 0; i < words.length; i++) {
+                lookupFailure = lookupFailure && (!compactDawg.lookup(words[i]) + "q");
+                lookupFailure = lookupFailure && (!compactDawg.lookupPrefix(words[i]) + "q");
+            }
+            t.assert(lookupFailure, dawgLabel + " does not contain any words with 'q' added to the end as term or prefix");
 
-            var prefix = words[i].substring(0, words[i].length - 1);
-            // if this prefix is also a word, skip
-            if (wordSet.contains(prefix)) continue;
-            prefixLookup = prefixLookup && (!compactDawg.lookup(prefix));
-        }
-        t.assert(prefixLookup, "compact dawg does not contain prefixes of all words as terms");
+            var prefixLookup = true;
+            for (var i = 0; i < words.length; i++) {
+                if (words[i].length == 1) continue;
 
-        t.assert(!compactDawg.lookup(""), "compact dawg does not contain the empty string as a term");
-        t.assert(compactDawg.lookupPrefix(""), "compact dawg does contain the empty string as a prefix");
+                var prefix = words[i].substring(0, words[i].length - 1);
+                // if this prefix is also a word, skip
+                if (wordSet.contains(prefix)) continue;
+                prefixLookup = prefixLookup && (!compactDawg.lookup(prefix));
+            }
+            t.assert(prefixLookup, dawgLabel + " does not contain prefixes of all words as terms");
 
-        // hacky equivalently functional continuation calculator that just iterates over the array
-        var manualContinuations = function(prefix, maxDepth) {
-            if (prefix.length > maxDepth) return [];
-            var matches = words.filter(function(w) { return w.substring(0, prefix.length) == prefix });
-            var obj = {}
-            matches.forEach(function (w) {
-                obj[w.substr(0, maxDepth)] = true;
-            })
-            return Object.keys(obj).sort();
-        }
+            t.assert(!compactDawg.lookup(""), dawgLabel + " does not contain the empty string as a term");
+            t.assert(compactDawg.lookupPrefix(""), dawgLabel + " does contain the empty string as a prefix");
 
-        t.deepEqual(compactDawg.prefixContinuations("a", 3), manualContinuations("a", 3), "prefix continuations correctly calculated for ('a', 3)");
-        t.deepEqual(compactDawg.prefixContinuations("ab", 3), manualContinuations("ab", 3), "prefix continuations correctly calculated for ('ab', 3)");
-        t.deepEqual(compactDawg.prefixContinuations("aba", 3), ['aba'], "'aba' the sole prefix continuation result for ('aba', 3)")
-        t.deepEqual(compactDawg.prefixContinuations("abac", 3), [], "prefix continuation search returns no results for ('abac', 3) [too long]")
-        t.deepEqual(compactDawg.prefixContinuations("zz", 3), [], "prefix continuation search returns no results for ('zz', 3) [no match]")
+            // hacky equivalently functional continuation calculator that just iterates over the array
+            var manualContinuations = function(prefix, maxDepth) {
+                if (prefix.length > maxDepth) return [];
+                var matches = words.filter(function(w) { return w.substring(0, prefix.length) == prefix });
+                var obj = {}
+                matches.forEach(function (w) {
+                    obj[w.substr(0, maxDepth)] = true;
+                })
+                return Object.keys(obj).sort();
+            }
 
+            t.deepEqual(compactDawg.prefixContinuations("a", 3), manualContinuations("a", 3), "prefix continuations correctly calculated for ('a', 3)");
+            t.deepEqual(compactDawg.prefixContinuations("ab", 3), manualContinuations("ab", 3), "prefix continuations correctly calculated for ('ab', 3)");
+            t.deepEqual(compactDawg.prefixContinuations("aba", 3), ['aba'], "'aba' the sole prefix continuation result for ('aba', 3)")
+            t.deepEqual(compactDawg.prefixContinuations("abac", 3), [], "prefix continuation search returns no results for ('abac', 3) [too long]")
+            t.deepEqual(compactDawg.prefixContinuations("zz", 3), [], "prefix continuation search returns no results for ('zz', 3) [no match]")
+        });
         callback();
     })
 

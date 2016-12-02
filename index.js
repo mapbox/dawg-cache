@@ -2,8 +2,13 @@ var binding = require("./lib/jsdawg.node");
 var assert = require("assert");
 var Symbol = require("es6-symbol");
 
-binding.Dawg.prototype.toCompactDawg = function() {
-    return new CompactDawg(this.toCompactDawgBuffer());
+
+var EDGE_COUNT_ONLY = 1,
+    INCLUDES_ENTRY_COUNT = 5;
+
+binding.Dawg.prototype.toCompactDawg = function(preserveCounts) {
+    preserveCounts = preserveCounts || false;
+    return new CompactDawg(this.toCompactDawgBuffer(preserveCounts));
 }
 
 var CompactDawg = function(buf) {
@@ -13,7 +18,7 @@ var CompactDawg = function(buf) {
     var magic = buf.slice(0, 4).toString();
     var version = buf[4];
     var charWidth = buf[5];
-    var edgeCountWidth = buf[6];
+    var nodeWidth = buf[6];
     var offsetWidth = buf[7];
     var size = buf.readUInt32LE(8);
     var checksum = buf.readUInt32LE(12);
@@ -25,7 +30,7 @@ var CompactDawg = function(buf) {
     assert(magic == "dawg", "dawg magic phrase is incorrect");
     assert(version == 1, "dawg version should be 1");
     assert(charWidth == 1, "only dawgs with one-byte chars are supported");
-    assert(edgeCountWidth == 1, "only dawgs with one-byte edge count widths are supported");
+    assert(nodeWidth == 1 || nodeWidth == 5, "only dawgs with one- or five-byte edge count widths are supported");
     assert(offsetWidth == 4, "only dawgs with four-byte offset widths are supported");
     assert(size == actualSize, "dawg size is not as expected");
     assert(checksum == actualChecksum, "dawg checksum is not correct");

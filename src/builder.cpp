@@ -13,18 +13,23 @@ const unsigned int FINAL_MASK = 0x7fffffff;
 
 const unsigned int DAWG_HEADER_SIZE = 16;
 
+const unsigned int EDGE_COUNT_ONLY = 1;
+const unsigned int INCLUDES_ENTRY_COUNT = 5;
+
 /* header format 16 bytes, consisting of:
     * the string "dawg" (4 bytes)
     * version number (1 byte) - currently 1
     * size in bytes of each character (1 byte) - currently always 1
-    * size in bytes of each edge count (1 byte) - currently always 1
+    * size in bytes of each node structure (1 byte):
+    *   either 1 byte if it's just an edge count
+    *   or 5 if it's an edge count (1 byte) and an entry count (4 bytes)
     * size in bytes of each node offset (1 byte) - currently always 4
     * size in bytes of the datastructure (does not include this header)
     * the crc32c checksum of the datastructure (does not include this header)
 */
 const char* DAWG_DEFAULT_HEADER = "dawg\x01\x01\x01\x04\0\0\0\0\0\0\0\0";
 
-void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, std::vector<unsigned int>* edge_locs, std::unordered_map<unsigned int, unsigned int>* node_locs) {
+void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, std::vector<unsigned int>* edge_locs, std::unordered_map<unsigned int, unsigned int>* node_locs, unsigned int node_size) {
     if (node_locs->count(node->id) > 0) {
         // already visited
         return;
@@ -34,6 +39,11 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
     (*node_locs)[node->id] = offset;
 
     output->push_back(static_cast<unsigned char>(node->edges.size()));
+    if (node_size == INCLUDES_ENTRY_COUNT) {
+        int cur_size = output->size();
+        output->resize(cur_size + sizeof(unsigned int));
+        memcpy(&((*output)[cur_size]), &(node->count), sizeof(unsigned int));
+    }
 
     std::vector<std::shared_ptr<DawgNode> > nodes_to_process;
     std::shared_ptr<DawgNode> child;
@@ -42,10 +52,10 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
         char edge_key = it->first;
         child = it->second;
 
-        int edge_offset = (i * 5) + offset + 1;
+        int edge_offset = (i * 5) + offset + node_size;
         unsigned int node_id, flagged_id;
 
-        if (child->edges.size() == 0) {
+        if (child->edges.size() == 0 && node_size == EDGE_COUNT_ONLY) {
             node_id = 0;
         } else {
             nodes_to_process.push_back(child);
@@ -65,11 +75,11 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
     }
 
     for (size_t i = 0; i < nodes_to_process.size(); i++) {
-        write_node(nodes_to_process[i], output, edge_locs, node_locs);
+        write_node(nodes_to_process[i], output, edge_locs, node_locs, node_size);
     }
 }
 
-void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool verbose) {
+void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool verbose, unsigned int node_size) {
     // write the header
     output->resize(output->size() + DAWG_HEADER_SIZE);
     memcpy(&((*output)[0]), DAWG_DEFAULT_HEADER, DAWG_HEADER_SIZE);
@@ -83,7 +93,7 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
         cout << "Starting serialization...\n";
     }
 
-    write_node(dawg->root, output, &edge_locs, &node_locs);
+    write_node(dawg->root, output, &edge_locs, &node_locs, node_size);
 
     if (verbose) {
         cout << "Rewriting offsets...\n";
@@ -113,6 +123,8 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
         cout << "Rewriting metadata\n";
     }
 
+    (*output)[6] = static_cast<unsigned char>(node_size);
+
     unsigned int data_size = ((unsigned int) output->size()) - DAWG_HEADER_SIZE;
     memcpy(&((*output)[8]), &data_size, sizeof(unsigned int));
 
@@ -124,7 +136,7 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
     }
 }
 
-bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_stream, bool verbose) {
+bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_stream, bool verbose, unsigned int node_size) {
     Dawg dawg;
     std::string word;
     int word_count = 0;
@@ -156,7 +168,7 @@ bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_st
 
     std::vector<unsigned char> output;
 
-    build_compact_dawg(&dawg, &output, verbose);
+    build_compact_dawg(&dawg, &output, verbose, node_size);
 
     output_stream->write((const char*)&output[0], output.size());
 
