@@ -282,12 +282,14 @@ class CompactIterator : public Nan::ObjectWrap {
                     }
                 }
             } else {
-                // enqueue the root
-                current_position.node_offset = 0;
-                current_position.edge_idx = 0;
-                current_position.visited = false;
+                // enqueue the root if the structure isn't empty
+                if (obj->data[0] > 0) {
+                    current_position.node_offset = 0;
+                    current_position.edge_idx = 0;
+                    current_position.visited = false;
 
-                obj->stack.push_back(current_position);
+                    obj->stack.push_back(current_position);
+                }
             }
         } else {
             Nan::ThrowTypeError("CompactDawgIterator needs to be called as a constructor");
@@ -348,7 +350,7 @@ class CompactIterator : public Nan::ObjectWrap {
                     stack->push_back(current_position);
                 } else {
                     // otherwise we'll move back up the tree
-                    current_word->pop_back();
+                    if (current_word->size() > 0) current_word->pop_back();
                 }
             } else {
                 // "recurse" down
