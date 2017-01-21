@@ -4,8 +4,23 @@ var queue = require('queue-async');
 var zlib = require('zlib');
 var forOf = require('es6-iterator/for-of');
 require('collections/collections.js');
+var binding = require("../lib/jsdawg.node");
 
 var jsdawg = require("../index");
+
+test('DAWG test invalid usage', function (t) {
+    var dawg = new jsdawg.Dawg();
+    t.throws(function() { dawg.insert(null) }, /first argument must be a String/, "validates inserted value");
+    t.throws(function() { dawg.insert({}) }, /first argument must be a String/, "validates inserted value");
+    t.throws(function() { dawg.insert(1.0) }, /first argument must be a String/, "validates inserted value");
+    t.throws(function() { dawg.insert(function(){}) }, /first argument must be a String/, "validates inserted value");
+    dawg.finish();
+    t.throws(function() { binding.compactDawgBufferLookup(); }, /first argument must be a Buffer/, "validates inserted value");
+    t.throws(function() { binding.compactDawgBufferLookup(new Buffer(0)); }, /second argument must be a String/, "validates inserted value");
+    var compactDawg = dawg.toCompactDawg();
+    t.throws(function() { compactDawg.lookupPrefix(); }, /second argument must be a String/, "validates inserted value");
+    t.end();
+});
 
 test('DAWG test', function (t) {
     var q = queue(1);
