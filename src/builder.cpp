@@ -38,9 +38,9 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
     std::vector<std::shared_ptr<DawgNode> > nodes_to_process;
     std::shared_ptr<DawgNode> child;
     int i = 0;
-    for (std::map<unsigned char, std::shared_ptr<DawgNode> >::iterator it = node->edges.begin(); it != node->edges.end(); ++it) {
-        char edge_key = it->first;
-        child = it->second;
+    for (auto const& edge : node->edges) {
+        char edge_key = edge.first;
+        child = edge.second;
 
         int edge_offset = (i * 5) + offset + 1;
         unsigned int node_id, flagged_id;
