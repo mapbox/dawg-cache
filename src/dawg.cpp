@@ -1,6 +1,5 @@
 // based on python code by Steve Hanov, 2011
 
-#include <exception>
 #include <algorithm>
 #include <map>
 #include <unordered_map>
@@ -16,7 +15,7 @@ class DawgNode {
         DawgNode();
         uint num_reachable();
 
-    operator std::string() {
+    std::string to_string() {
         std::string out = "";
         if (final) {
             out += "1_";
@@ -93,6 +92,8 @@ Dawg::Dawg() {
 }
 
 bool Dawg::insert(std::string word) {
+    // This does lexigraphical compare
+    // http://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
     if (word <= previous_word) {
         return false;
     }
@@ -155,12 +156,10 @@ void Dawg::finish() {
 
 void Dawg::_minimize(int down_to) {
     // proceed from the leaf up to a certain point
-    DawgNodeCheckEntry to_check;
-    std::string child_string;
 
     for (int i = unchecked_nodes.size() - 1; i >= down_to; i--) {
-        to_check = unchecked_nodes[i];
-        child_string = (*(to_check.child)).operator std::string();
+        DawgNodeCheckEntry & to_check = unchecked_nodes[i];
+        std::string child_string = to_check.child->to_string();
         if (minimized_nodes.count(child_string) > 0) {
             // replace the child with the previously encountered one
             to_check.parent->edges[to_check.letter] = minimized_nodes[child_string];
