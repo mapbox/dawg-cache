@@ -37,7 +37,7 @@ class DawgNode {
     }
 };
 
-DawgNode::DawgNode(void) {
+DawgNode::DawgNode() {
     id = 0;
     final = false;
 
@@ -45,7 +45,7 @@ DawgNode::DawgNode(void) {
     count = 0;
 }
 
-uint DawgNode::num_reachable(void) {
+uint DawgNode::num_reachable() {
     // if a count is already assigned, return it
     if (count) return count;
 
@@ -86,7 +86,7 @@ class Dawg {
         void _minimize(int down_to);
 };
 
-Dawg::Dawg(void) {
+Dawg::Dawg() {
     previous_word = "";
     node_counter = 1;
     root = std::make_shared<DawgNode>();
