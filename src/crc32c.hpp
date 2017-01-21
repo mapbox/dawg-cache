@@ -36,7 +36,7 @@ static const uint32_t crc32cLookup[256] = {
     0x79B737BA,0x8BDCB4B9,0x988C474D,0x6AE7C44E,0xBE2DA0A5,0x4C4623A6,0x5F16D052,0xAD7D5351,
 };
 
-uint32_t crc32c(const void* data, size_t length, uint32_t previousCrc32 = 0) {
+inline uint32_t crc32c(const void* data, size_t length, uint32_t previousCrc32 = 0) {
     uint32_t crc = ~previousCrc32;
     unsigned char* current = (unsigned char*) data;
     while (length--) crc = (crc >> 8) ^ crc32cLookup[(crc & 0xFF) ^ *current++];
