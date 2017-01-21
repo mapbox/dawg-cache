@@ -24,16 +24,10 @@ class DawgNode {
             out += "0_";
         }
 
-        char label;
-        std::shared_ptr<DawgNode> child;
         for (auto const& edge : edges) {
-            label = edge.first;
-            child = edge.second;
-
-            out.push_back(label);
+            out.push_back(edge.first);
             out.push_back('_');
-
-            out += std::to_string(child->id);
+            out += std::to_string(edge.second->id);
             out.push_back('_');
         }
 
