@@ -131,12 +131,12 @@ bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_st
     time_t start = time(NULL);
 
     while (std::getline(*input_stream, word)) {
-        if (!word.length()) {
+        if (word.empty()) {
             continue;
         }
         word_count += 1;
 
-        if (!dawg.insert(word)) return false;
+        if (!dawg.insert(word.data(),word.size())) return false;
 
         if (verbose && word_count % 100 == 0) {
             cout << word_count << "\r";

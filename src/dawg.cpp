@@ -75,7 +75,7 @@ class Dawg {
         std::unordered_map<std::string, std::shared_ptr<DawgNode> > minimized_nodes;
         int node_counter;
         Dawg();
-        bool insert(std::string word);
+        bool insert(const char * data, std::size_t len);
         void finish();
         bool lookup(std::string word);
         bool lookup_prefix(std::string word);
@@ -91,7 +91,8 @@ Dawg::Dawg() {
     root = std::make_shared<DawgNode>();
 }
 
-bool Dawg::insert(std::string word) {
+bool Dawg::insert(const char* data, std::size_t len) {
+    std::string word(data,len);
     // This does lexigraphical compare
     // http://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
     if (word <= previous_word) {
@@ -100,7 +101,7 @@ bool Dawg::insert(std::string word) {
 
     // find common prefix between word and previous word
     unsigned int common_prefix = 0;
-    unsigned int range = std::min(word.length(), previous_word.length());
+    unsigned int range = std::min(len, previous_word.length());
     for (uint i = 0; i < range; i++) {
         if (word[i] != previous_word[i]) {
             break;
@@ -123,7 +124,7 @@ bool Dawg::insert(std::string word) {
     }
 
     DawgNodeCheckEntry check_entry;
-    for (size_t i = common_prefix; i < word.length(); i++) {
+    for (size_t i = common_prefix; i < len; i++) {
         char letter = word[i];
 
         std::shared_ptr<DawgNode> next_node = std::make_shared<DawgNode>();
@@ -141,7 +142,7 @@ bool Dawg::insert(std::string word) {
     }
 
     node->final = true;
-    previous_word = word;
+    previous_word = std::move(word);
 
     return true;
 }

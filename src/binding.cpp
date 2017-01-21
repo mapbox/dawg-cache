@@ -63,13 +63,16 @@ class JSDawg : public Nan::ObjectWrap {
         if (!info[0]->IsString()) {
             return Nan::ThrowTypeError("first argument must be a String");
         }
-        JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         String::Utf8Value utf8_value(info[0].As<String>());
-        std::string input = std::string(*utf8_value, utf8_value.length());
-        bool success = obj->dawg_.insert(input);
-
-        if (!success) {
-            Nan::ThrowError("Entries must be inserted in order");
+        int len = utf8_value.length();
+        if (len <= 0) {
+            Nan::ThrowError("empty string passed to insert");
+        } else {
+            JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+            bool success = obj->dawg_.insert(*utf8_value, static_cast<std::size_t>(len));
+            if (!success) {
+                Nan::ThrowError("Entries must be inserted in order");
+            }
         }
     }
 
