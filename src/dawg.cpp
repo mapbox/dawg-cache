@@ -156,7 +156,8 @@ void Dawg::finish() {
 void Dawg::_minimize(int down_to) {
     // proceed from the leaf up to a certain point
 
-    for (int i = unchecked_nodes.size() - 1; i >= down_to; i--) {
+    int num_unchecked = static_cast<int>(unchecked_nodes.size());
+    for (int i = num_unchecked - 1; i >= down_to; i--) {
         DawgNodeCheckEntry & to_check = unchecked_nodes[i];
         std::string child_string = to_check.child->to_string();
         if (minimized_nodes.count(child_string) > 0) {
