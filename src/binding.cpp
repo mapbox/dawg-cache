@@ -203,7 +203,7 @@ NAN_METHOD(CompactLookup) {
 
     v8::Local<v8::Object> bufferObj = info[0]->ToObject();
 
-    if (bufferObj->IsNull() || bufferObj->IsUndefined() || !node::Buffer::HasInstance(bufferObj)) {
+    if (!node::Buffer::HasInstance(bufferObj)) {
         return Nan::ThrowTypeError("first argument must be a Buffer");
     }
 
