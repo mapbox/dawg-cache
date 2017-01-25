@@ -11,6 +11,7 @@ class DawgNode {
         unsigned int id;
         bool final;
         std::map<unsigned char, std::shared_ptr<DawgNode> > edges;
+        // Number of end nodes reachable from this one.
         unsigned int count;
         DawgNode();
         uint num_reachable();
@@ -36,13 +37,10 @@ class DawgNode {
     }
 };
 
-DawgNode::DawgNode() {
-    id = 0;
-    final = false;
-
-    // Number of end nodes reachable from this one.
-    count = 0;
-}
+DawgNode::DawgNode() :
+  id(0),
+  final(false),
+  count(0) { }
 
 uint DawgNode::num_reachable() {
     // if a count is already assigned, return it
@@ -95,11 +93,10 @@ class Dawg {
         void _minimize(int down_to);
 };
 
-Dawg::Dawg() {
-    previous_word = "";
-    node_counter = 1;
-    root = std::make_shared<DawgNode>();
-}
+Dawg::Dawg() :
+  previous_word(),
+  root(std::make_shared<DawgNode>()),
+  node_counter(1) { }
 
 bool Dawg::insert(const char* data, std::size_t len) {
     std::string word(data,len);
