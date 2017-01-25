@@ -61,10 +61,20 @@ uint DawgNode::num_reachable() {
 }
 
 class DawgNodeCheckEntry {
-    public:
-        std::shared_ptr<DawgNode> parent;
-        char letter;
-        std::shared_ptr<DawgNode> child;
+  public:
+    DawgNodeCheckEntry(char let,
+                       std::shared_ptr<DawgNode> const& par)
+      : parent(par),
+        child(std::make_shared<DawgNode>()),
+        letter(let) {}
+    // make this class noncopyable, only movable
+    DawgNodeCheckEntry(DawgNodeCheckEntry && ) = default;
+    DawgNodeCheckEntry( DawgNodeCheckEntry const& ) = delete;
+    DawgNodeCheckEntry& operator=(DawgNodeCheckEntry const& ) = delete;
+
+    std::shared_ptr<DawgNode> parent;
+    std::shared_ptr<DawgNode> child;
+    char letter;
 };
 
 class Dawg {
@@ -123,22 +133,13 @@ bool Dawg::insert(const char* data, std::size_t len) {
         node = unchecked_nodes.back().child;
     }
 
-    DawgNodeCheckEntry check_entry;
     for (size_t i = common_prefix; i < len; i++) {
         char letter = word[i];
-
-        std::shared_ptr<DawgNode> next_node = std::make_shared<DawgNode>();
-        next_node->id = node_counter;
-        node_counter++;
-
-        node->edges[letter] = next_node;
-
-        check_entry.parent = node;
-        check_entry.letter = letter;
-        check_entry.child = next_node;
-        unchecked_nodes.push_back(check_entry);
-
-        node = next_node;
+        unchecked_nodes.emplace_back(letter,node);
+        DawgNodeCheckEntry & check_entry = unchecked_nodes.back();
+        check_entry.child->id = node_counter++;
+        node->edges[letter] = check_entry.child;
+        node = check_entry.child;
     }
 
     node->final = true;
