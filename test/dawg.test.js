@@ -18,13 +18,11 @@ test('DAWG test invalid usage', function (t) {
     t.throws(function() { dawg.lookupPrefix(null) }, /first argument must be a String/, "validates inserted value");
     t.throws(function() { dawg.insert('') }, /empty string passed to insert/, "validates inserted value");
     dawg.finish();
-    t.throws(function() { binding.compactDawgBufferLookup(); }, /first argument must be a Buffer/, "validates inserted value");
-    t.throws(function() { binding.compactDawgBufferLookup({},''); }, /first argument must be a Buffer/, "validates inserted value");
-    t.throws(function() { binding.compactDawgBufferLookup(null); }, /first argument must be a Buffer/, "validates inserted value");
-    t.throws(function() { binding.compactDawgBufferLookup(undefined); }, /first argument must be a Buffer/, "validates inserted value");
-    t.throws(function() { binding.compactDawgBufferLookup(new Buffer(0)); }, /second argument must be a String/, "validates inserted value");
     var compactDawg = dawg.toCompactDawg();
-    t.throws(function() { compactDawg.lookupPrefix(); }, /second argument must be a String/, "validates inserted value");
+    t.assert(compactDawg.lookup() == '');
+    t.assert(compactDawg.lookupPrefix() == '');
+    t.assert(compactDawg.lookup({}) == '');
+    t.assert(compactDawg.lookupPrefix({}) == '');
     t.end();
 });
 

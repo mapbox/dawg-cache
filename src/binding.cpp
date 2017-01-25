@@ -197,19 +197,9 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
 }
 
 NAN_METHOD(CompactLookup) {
-    if (!info[0]->IsObject()) {
-        return Nan::ThrowTypeError("first argument must be a Buffer");
-    }
-
+    // NOTE: these values are not validated since this
+    // function is wrapped in JS
     v8::Local<v8::Object> bufferObj = info[0]->ToObject();
-
-    if (!node::Buffer::HasInstance(bufferObj)) {
-        return Nan::ThrowTypeError("first argument must be a Buffer");
-    }
-
-    if (!info[1]->IsString()) {
-        return Nan::ThrowTypeError("second argument must be a String");
-    }
     String::Utf8Value utf8_value(info[1].As<String>());
 
     unsigned char* search = (unsigned char*) *utf8_value;
