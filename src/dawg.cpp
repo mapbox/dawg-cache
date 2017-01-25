@@ -85,8 +85,8 @@ class Dawg {
         Dawg();
         bool insert(const char * data, std::size_t len);
         void finish();
-        bool lookup(std::string word);
-        bool lookup_prefix(std::string word);
+        bool lookup(const char * data, std::size_t len);
+        bool lookup_prefix(const char * data, std::size_t len);
         uint edge_count();
         uint node_count();
     private:
@@ -170,12 +170,11 @@ void Dawg::_minimize(int down_to) {
     }
 }
 
-bool Dawg::lookup(std::string word) {
+bool Dawg::lookup(const char * data, std::size_t len) {
     std::shared_ptr<DawgNode> node = root;
 
-    char letter;
-    for (uint i = 0; i < word.length(); i++) {
-        letter = word[i];
+    for (uint i = 0; i < len; i++) {
+        char letter = data[i];
         if (node->edges.count(letter) == 0) {
             return false;
         } else {
@@ -189,11 +188,11 @@ bool Dawg::lookup(std::string word) {
     return false;
 }
 
-bool Dawg::lookup_prefix(std::string word) {
+bool Dawg::lookup_prefix(const char * data, std::size_t len) {
     std::shared_ptr<DawgNode> node = root;
 
-    for (uint i = 0; i < word.length(); i++) {
-        char letter = word[i];
+    for (uint i = 0; i < len; i++) {
+        char letter = data[i];
         if (node->edges.count(letter) == 0) {
             return false;
         } else {

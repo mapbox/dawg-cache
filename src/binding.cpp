@@ -87,9 +87,7 @@ class JSDawg : public Nan::ObjectWrap {
         }
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         String::Utf8Value utf8_value(info[0].As<String>());
-        std::string input = std::string(*utf8_value, utf8_value.length());
-        bool found = obj->dawg_.lookup(input);
-
+        bool found = obj->dawg_.lookup(*utf8_value, utf8_value.length());
         info.GetReturnValue().Set(found);
     }
 
@@ -99,8 +97,7 @@ class JSDawg : public Nan::ObjectWrap {
         }
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         String::Utf8Value utf8_value(info[0].As<String>());
-        std::string input = std::string(*utf8_value, utf8_value.length());
-        bool found = obj->dawg_.lookup_prefix(input);
+        bool found = obj->dawg_.lookup_prefix(*utf8_value, utf8_value.length());
 
         info.GetReturnValue().Set(found);
     }
