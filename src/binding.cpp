@@ -15,11 +15,20 @@ void free_dawg_vector(char* data, void* hint) {
     delete (std::vector<unsigned char>*)hint;
 }
 
-typedef struct {
+struct node_position {
     unsigned int node_offset;
     unsigned int edge_idx;
     bool visited;
-} node_position;
+    node_position(unsigned int off,unsigned int idx, bool v) :
+      node_offset(off),
+      edge_idx(idx),
+      visited(v) {}
+    // non-copyable
+    node_position( node_position && ) = default;
+    node_position& operator=(node_position && ) = default;
+    node_position( node_position const& ) = delete;
+    node_position& operator=(node_position const& ) = delete;
+};
 
 class JSDawg : public Nan::ObjectWrap {
     public:
@@ -269,7 +278,6 @@ class CompactIterator : public Nan::ObjectWrap {
             obj->data = full_data + DAWG_HEADER_SIZE;
             obj->return_empty = false;
 
-            node_position current_position;
             if (info.Length() == 2) {
                 // we're doing a prefix search, so find the prefix node and
                 // enqueue it if it exists
@@ -285,21 +293,13 @@ class CompactIterator : public Nan::ObjectWrap {
                         obj->return_empty = true;
                     }
                     if (result.node_offset != -1) {
-                        current_position.node_offset = result.node_offset;
-                        current_position.edge_idx = 0;
-                        current_position.visited = false;
-
-                        obj->stack.push_back(current_position);
+                        obj->stack.emplace_back(result.node_offset, 0, false);
                     }
                 }
             } else {
                 // enqueue the root if the structure isn't empty
                 if (obj->data[0] > 0) {
-                    current_position.node_offset = 0;
-                    current_position.edge_idx = 0;
-                    current_position.visited = false;
-
-                    obj->stack.push_back(current_position);
+                    obj->stack.emplace_back(0,0,false);
                 }
             }
         } else {
@@ -323,52 +323,53 @@ class CompactIterator : public Nan::ObjectWrap {
         unsigned int flagged_offset, next_final = 0;
         unsigned int next_offset = 0, edge_count, edge_offset;
         char letter;
-        node_position current_position, new_back;
 
         std::string output;
         bool has_output = false;
 
         while (stack->size() > 0 && !has_output) {
-            current_position = stack->back();
+            node_position const& current_position = stack->back();
+            // NOTE: since `pop_back()` below will invalidate iterators
+            // we work with copies of the node_position data rather
+            // than the node_position reference itself (which may become invalid)
+            unsigned int cur_off = current_position.node_offset;
+            unsigned int cur_idx = current_position.edge_idx;
+            bool cur_visited = current_position.visited;
 
-            edge_offset = current_position.node_offset + 1 + (5 * current_position.edge_idx);
+            edge_offset = cur_off + 1 + (5 * cur_idx);
             letter = data[edge_offset];
 
             memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
             next_offset = (int)(flagged_offset & FINAL_MASK);
             next_final = flagged_offset & IS_FINAL_FLAG;
 
-            if (next_final && !current_position.visited) {
+            if (next_final && !cur_visited) {
                 has_output = true;
                 output = std::string(current_word->begin(), current_word->end()) + letter;
             }
 
-            if (next_offset == 0 || current_position.visited) {
+            if (next_offset == 0 || cur_visited) {
                 stack->pop_back();
 
                 if (stack->size() > 0) {
-                    new_back = stack->back();
-                    new_back.visited = true;
-                    stack->pop_back();
-                    stack->push_back(new_back);
+                    node_position & latest_back = stack->back();
+                    latest_back.visited = true;
                 }
 
-                edge_count = (int) data[current_position.node_offset];
-                if (current_position.edge_idx < edge_count - 1) {
+                edge_count = (int) data[cur_off];
+                if (cur_idx < edge_count - 1) {
                     // done with the children, but still have siblings so move laterally
-                    current_position.edge_idx++;
-                    current_position.visited = false;
-                    stack->push_back(current_position);
+                    unsigned int next_position = cur_idx;
+                    next_position++;
+                    // add a copy to the stack
+                    stack->emplace_back(cur_off,next_position,false);
                 } else {
                     // otherwise we'll move back up the tree
                     if (current_word->size() > 0) current_word->pop_back();
                 }
             } else {
                 // "recurse" down
-                current_position.node_offset = next_offset;
-                current_position.edge_idx = 0;
-                current_position.visited = false;
-                stack->push_back(current_position);
+                stack->emplace_back(next_offset,0,false);
                 current_word->push_back(letter);
             }
         }
