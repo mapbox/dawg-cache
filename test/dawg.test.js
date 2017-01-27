@@ -121,7 +121,8 @@ test('DAWG test', function (t) {
         t.assert(prefixLookup, "compact dawg contains prefixes of all words as prefixes");
 
         var compactDawgWords = [];
-        forOf(compactDawg, function(value) { compactDawgWords.push(value); });
+        var iterable = dawg.toCompactDawgIterator();
+        forOf(iterable, function(value) { compactDawgWords.push(value); });
         var iteratorLookup = true;
         for (var i = 0; i < words.length; i++) {
             iteratorLookup = iteratorLookup && (words[i] == compactDawgWords[i]);
@@ -129,7 +130,7 @@ test('DAWG test', function (t) {
         t.assert(iteratorLookup, "compact dawg iterator reproduces original list");
 
         var prefixWords = [];
-        var prefixIterator = compactDawg.iterator("test");
+        var prefixIterator = iterable.iterator("test");
         var priNext = prefixIterator.next();
         while (!priNext.done) {
             prefixWords.push(priNext.value);
@@ -139,7 +140,7 @@ test('DAWG test', function (t) {
         t.assert(prefixWords.indexOf("test") == 0, "submitted prefix 'test' is included in results");
 
         var prefixWords = [];
-        var prefixIterator = compactDawg.iterator("testac");
+        var prefixIterator = iterable.iterator("testac");
         var priNext = prefixIterator.next();
         while (!priNext.done) {
             prefixWords.push(priNext.value);
@@ -149,7 +150,7 @@ test('DAWG test', function (t) {
         t.assert(prefixWords.indexOf("testac") == -1, "submitted prefix 'testac' is not included in results");
 
         var prefixWords = [];
-        var prefixIterator = compactDawg.iterator("testaaa");
+        var prefixIterator = iterable.iterator("testaaa");
         var priNext = prefixIterator.next();
         while (!priNext.done) {
             prefixWords.push(priNext.value);
