@@ -207,111 +207,6 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
 
 constexpr std::size_t arena_size = 1024;
 
-class CompactDawg : public Nan::ObjectWrap {
-    public:
-        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
-            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
-            tpl->SetClassName(Nan::New("CompactDawg").ToLocalChecked());
-            tpl->InstanceTemplate()->SetInternalFieldCount(1);
-            SetPrototypeMethod(tpl, "_lookup", Lookup);
-            constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
-            Nan::Set(
-                target,
-                Nan::New("CompactDawg").ToLocalChecked(),
-                Nan::GetFunction(tpl).ToLocalChecked()
-            );
-        }
-    private:
-        explicit CompactDawg(v8::Local<v8::Object> buf)
-          : data(node::Buffer::Data(buf) + DAWG_HEADER_SIZE),
-            len(node::Buffer::Length(buf)),
-            persistentBuffer() {
-              persistentBuffer.Reset(buf);
-          }
-        ~CompactDawg() { persistentBuffer.Reset(); }
-        char* data;
-        size_t len;
-        Nan::Persistent<v8::Object> persistentBuffer;
-
-    static NAN_METHOD(New) {
-        if (info.IsConstructCall()) {
-            if (info.Length() != 1) {
-                Nan::ThrowTypeError("Invalid number of arguments");
-                return;
-            }
-
-            v8::Local<v8::Value> obj = info[0];
-            if (!obj->IsObject()) {
-                return Nan::ThrowTypeError("first argument must be a Buffer");
-            }
-
-            if (!node::Buffer::HasInstance(obj)) {
-                Nan::ThrowTypeError("Input must be a buffer");
-                return;
-            }
-
-            CompactDawg *dawg = new CompactDawg(obj->ToObject());
-            dawg->Wrap(info.This());
-            info.GetReturnValue().Set(info.This());
-        } else {
-            Nan::ThrowTypeError("CompactDawg needs to be called as a constructor");
-        }
-    }
-
-    static NAN_METHOD(Lookup) {
-        CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
-        v8::Local<v8::Value> js_val = info[0];
-        std::uint32_t return_val = 1;
-        // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
-        // https://github.com/nodejs/node/pull/1042
-        if (!js_val.IsEmpty()) {
-            v8::Local<v8::String> js_str = js_val->ToString();
-            if (!js_str.IsEmpty()) {
-                int js_str_len = js_str->Length();
-                if (js_str_len > 0) {
-                    // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
-                    // but I've not enabled this yet as it does not clearly increase performance
-                    const int flags =
-                        v8::String::NO_NULL_TERMINATION | v8::String::REPLACE_INVALID_UTF8;
-                    // max possible decoded utf length
-                    // much faster than calling `str->Utf8Length();` to get exact length
-                    // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
-                    std::size_t len = (3 * js_str_len) + 1;
-                    if (len > arena_size) {
-                        char * heap_string = static_cast<char *>(std::malloc(len));
-                        std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), 0, flags);
-                        heap_string[utf8_length] = '\0';
-                        dawg_search_result result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length);
-                        if (result.found) {
-                            return_val = result.final ? 2 : 1;
-                        } else {
-                            return_val = 0;
-                        }
-                        free(heap_string);
-                    } else {
-                        char arena[arena_size];
-                        std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), 0, flags);
-                        arena[utf8_length] = '\0';
-                        dawg_search_result result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length);
-                        if (result.found) {
-                            return_val = result.final ? 2 : 1;
-                        } else {
-                            return_val = 0;
-                        }
-                    }
-                }
-            }
-        }
-        info.GetReturnValue().Set(return_val);
-        return;
-        }
-
-    static inline Nan::Persistent<v8::Function> & constructor() {
-        static Nan::Persistent<v8::Function> my_constructor;
-        return my_constructor;
-    }
-};
-
 class CompactIterator : public Nan::ObjectWrap {
     public:
         static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
@@ -328,6 +223,12 @@ class CompactIterator : public Nan::ObjectWrap {
                 Nan::GetFunction(tpl).ToLocalChecked()
             );
         }
+
+        static inline Nan::Persistent<v8::Function> & constructor() {
+            static Nan::Persistent<v8::Function> my_constructor;
+            return my_constructor;
+        }
+
     private:
         explicit CompactIterator() {}
         ~CompactIterator() { persistentBuffer.Reset(); }
@@ -462,6 +363,129 @@ class CompactIterator : public Nan::ObjectWrap {
             info.GetReturnValue().Set(Nan::New(output).ToLocalChecked());
         }
 
+        return;
+    }
+};
+
+class CompactDawg : public Nan::ObjectWrap {
+    public:
+        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
+            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+            tpl->SetClassName(Nan::New("CompactDawg").ToLocalChecked());
+            tpl->InstanceTemplate()->SetInternalFieldCount(1);
+            SetPrototypeMethod(tpl, "_lookup", Lookup);
+            SetPrototypeMethod(tpl, "_iterator", Iterator);
+            constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+            Nan::Set(
+                target,
+                Nan::New("CompactDawg").ToLocalChecked(),
+                Nan::GetFunction(tpl).ToLocalChecked()
+            );
+        }
+    private:
+        explicit CompactDawg(v8::Local<v8::Object> buf)
+          : data(node::Buffer::Data(buf) + DAWG_HEADER_SIZE),
+            len(node::Buffer::Length(buf)),
+            persistentBuffer() {
+              persistentBuffer.Reset(buf);
+          }
+        ~CompactDawg() { persistentBuffer.Reset(); }
+        char* data;
+        size_t len;
+        Nan::Persistent<v8::Object> persistentBuffer;
+
+    static NAN_METHOD(New) {
+        if (info.IsConstructCall()) {
+            if (info.Length() != 1) {
+                Nan::ThrowTypeError("Invalid number of arguments");
+                return;
+            }
+
+            v8::Local<v8::Value> obj = info[0];
+            if (!obj->IsObject()) {
+                return Nan::ThrowTypeError("first argument must be a Buffer");
+            }
+
+            if (!node::Buffer::HasInstance(obj)) {
+                Nan::ThrowTypeError("Input must be a buffer");
+                return;
+            }
+
+            CompactDawg *dawg = new CompactDawg(obj->ToObject());
+            dawg->Wrap(info.This());
+            info.GetReturnValue().Set(info.This());
+        } else {
+            Nan::ThrowTypeError("CompactDawg needs to be called as a constructor");
+        }
+    }
+
+    static NAN_METHOD(Lookup) {
+        CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
+        v8::Local<v8::Value> js_val = info[0];
+        std::uint32_t return_val = 1;
+        // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
+        // https://github.com/nodejs/node/pull/1042
+        if (!js_val.IsEmpty()) {
+            v8::Local<v8::String> js_str = js_val->ToString();
+            if (!js_str.IsEmpty()) {
+                int js_str_len = js_str->Length();
+                if (js_str_len > 0) {
+                    // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
+                    // but I've not enabled this yet as it does not clearly increase performance
+                    const int flags =
+                        v8::String::NO_NULL_TERMINATION | v8::String::REPLACE_INVALID_UTF8;
+                    // max possible decoded utf length
+                    // much faster than calling `str->Utf8Length();` to get exact length
+                    // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
+                    std::size_t len = (3 * js_str_len) + 1;
+                    if (len > arena_size) {
+                        char * heap_string = static_cast<char *>(std::malloc(len));
+                        std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), 0, flags);
+                        heap_string[utf8_length] = '\0';
+                        dawg_search_result result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length);
+                        if (result.found) {
+                            return_val = result.final ? 2 : 1;
+                        } else {
+                            return_val = 0;
+                        }
+                        free(heap_string);
+                    } else {
+                        char arena[arena_size];
+                        std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), 0, flags);
+                        arena[utf8_length] = '\0';
+                        dawg_search_result result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length);
+                        if (result.found) {
+                            return_val = result.final ? 2 : 1;
+                        } else {
+                            return_val = 0;
+                        }
+                    }
+                }
+            }
+        }
+        info.GetReturnValue().Set(return_val);
+        return;
+    }
+
+    static NAN_METHOD(Iterator) {
+        CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
+        v8::Local<v8::Object> buf = Nan::New(obj->persistentBuffer);
+        v8::Local<v8::Value> val(buf);
+
+        if (info.Length() > 0) {
+            v8::Local<v8::Value> argv[2] = {val, info[0]};
+            info.GetReturnValue().Set(Nan::NewInstance(
+                Nan::New(CompactIterator::constructor()),
+                2,
+                argv
+            ).ToLocalChecked());
+        } else {
+            info.GetReturnValue().Set(Nan::NewInstance(
+                Nan::New(CompactIterator::constructor()),
+                1,
+                &val
+            ).ToLocalChecked());
+        }
         return;
     }
 

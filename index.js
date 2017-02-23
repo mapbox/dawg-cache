@@ -42,6 +42,26 @@ binding.CompactDawg.prototype.lookup = function(prefix) {
     return this._lookup(prefix) == 2;
 }
 
+binding.CompactDawg.prototype.iterator = function(prefix) {
+    // implement the ES6 iterator pattern
+    var it = prefix ? this._iterator(prefix) : this._iterator();
+    return {
+        next: prefix ?
+            function() {
+                var n = it.next();
+                out = {done: n === undefined};
+                out.value = out.done ? n : prefix + n;
+                return out;
+            } :
+            function() {
+                var n = it.next();
+                return {value: n, done: n === undefined};
+            }
+    }
+}
+
+binding.CompactDawg.prototype[Symbol.iterator] = binding.CompactDawg.prototype.iterator;
+
 var CompactDawgIterator = function(buf) {
     this.data = buf;
 }
