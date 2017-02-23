@@ -472,8 +472,7 @@ class CompactDawg : public Nan::ObjectWrap {
         v8::Local<v8::Object> buf = Nan::New(obj->persistentBuffer);
         v8::Local<v8::Value> val(buf);
 
-        bool prefix = info.Length() > 0;
-        if (prefix) {
+        if (info.Length() > 0) {
             v8::Local<v8::Value> argv[2] = {val, info[0]};
             info.GetReturnValue().Set(Nan::NewInstance(
                 Nan::New(CompactIterator::constructor()),
