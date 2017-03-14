@@ -470,20 +470,20 @@ class CompactDawg : public Nan::ObjectWrap {
     static NAN_METHOD(Iterator) {
         CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Object> buf = Nan::New(obj->persistentBuffer);
-        v8::Local<v8::Value> val(buf);
 
         if (info.Length() > 0) {
-            v8::Local<v8::Value> argv[2] = {val, info[0]};
+            v8::Local<v8::Value> argv[2] = {buf, info[0]};
             info.GetReturnValue().Set(Nan::NewInstance(
                 Nan::New(CompactIterator::constructor()),
                 2,
                 argv
             ).ToLocalChecked());
         } else {
+            v8::Local<v8::Value> argv[1] = {buf};
             info.GetReturnValue().Set(Nan::NewInstance(
                 Nan::New(CompactIterator::constructor()),
                 1,
-                &val
+                argv
             ).ToLocalChecked());
         }
         return;

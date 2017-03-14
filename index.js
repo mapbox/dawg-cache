@@ -29,11 +29,7 @@ function validate(buf) {
 binding.Dawg.prototype.toCompactDawg = function() {
     return new binding.CompactDawg(validate(this.toCompactDawgBuffer()));
 }
-
-binding.Dawg.prototype.toCompactDawgIterator = function() {
-    return new CompactDawgIterator(validate(this.toCompactDawgBuffer()));
-}
-
+    
 binding.CompactDawg.prototype.lookupPrefix = function(prefix) {
     return this._lookup(prefix) != 0;
 }
@@ -62,32 +58,7 @@ binding.CompactDawg.prototype.iterator = function(prefix) {
 
 binding.CompactDawg.prototype[Symbol.iterator] = binding.CompactDawg.prototype.iterator;
 
-var CompactDawgIterator = function(buf) {
-    this.data = buf;
-}
-
-CompactDawgIterator.prototype.iterator = function(prefix) {
-    // implement the ES6 iterator pattern
-    var it = prefix ? new binding.CompactDawgIterator(this.data, prefix) : new binding.CompactDawgIterator(this.data);
-    return {
-        next: prefix ?
-            function() {
-                var n = it.next();
-                out = {done: n === undefined};
-                out.value = out.done ? n : prefix + n;
-                return out;
-            } :
-            function() {
-                var n = it.next();
-                return {value: n, done: n === undefined};
-            }
-    }
-}
-
-CompactDawgIterator.prototype[Symbol.iterator] = CompactDawgIterator.prototype.iterator;
-
 module.exports = {
     Dawg: binding.Dawg,
-    CompactDawg: binding.CompactDawg,
-    CompactDawgIterator: CompactDawgIterator
+    CompactDawg: binding.CompactDawg
 };
