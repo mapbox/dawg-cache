@@ -152,7 +152,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
     unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, edge_count, edge_offset, min, max, guess;
     bool match = false;
-    char search_letter, letter;
+    unsigned char search_letter, letter;
 
     dawg_search_result output;
 
@@ -307,7 +307,7 @@ class CompactIterator : public Nan::ObjectWrap {
 
         unsigned int flagged_offset, next_final = 0;
         unsigned int next_offset = 0, edge_count, edge_offset;
-        char letter;
+        unsigned char letter;
 
         std::string output;
         bool has_output = false;
@@ -330,7 +330,7 @@ class CompactIterator : public Nan::ObjectWrap {
 
             if (next_final && !cur_visited) {
                 has_output = true;
-                output = std::string(current_word->begin(), current_word->end()) + letter;
+                output = std::string(current_word->begin(), current_word->end()) + reinterpret_cast<char &>(letter);
             }
 
             if (next_offset == 0 || cur_visited) {
