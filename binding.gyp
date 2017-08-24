@@ -1,25 +1,28 @@
 {
+  'includes': [ 'common.gypi' ],
   "targets": [
     {
       "target_name": "jsdawg",
       "sources": [
         "src/binding.cpp"
       ],
-      "include_dirs"  : [
-            "<!(node -e \"require('nan')\")"
+      'include_dirs': [
+        '<!(node -e \'require("nan")\')'
       ],
-      "cflags": ["-std=c++11", "-O3"],
-      'cflags_cc!': ['-Os'],
-      'conditions': [
-        ['OS=="mac"', {
-          'xcode_settings': {
-            'OTHER_CFLAGS': ['-O3'],
-            'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++', '-O3'],
-            'OTHER_LDFLAGS': ['-stdlib=libc++'],
-            'MACOSX_DEPLOYMENT_TARGET': '10.7'
-          }
-        }]
-      ]
+      'ldflags': [
+        '-Wl,-z,now',
+      ],
+      'xcode_settings': {
+        'OTHER_LDFLAGS':[
+          '-Wl,-bind_at_load'
+        ],
+        'GCC_ENABLE_CPP_RTTI': 'YES',
+        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
+        'MACOSX_DEPLOYMENT_TARGET':'10.8',
+        'CLANG_CXX_LIBRARY': 'libc++',
+        'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0'
+      }
     },
     {
       "target_name": "action_after_build",

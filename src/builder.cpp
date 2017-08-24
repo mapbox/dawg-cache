@@ -48,9 +48,9 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
     std::vector<std::shared_ptr<DawgNode> > nodes_to_process;
     std::shared_ptr<DawgNode> child;
     int i = 0;
-    for (std::map<unsigned char, std::shared_ptr<DawgNode> >::iterator it = node->edges.begin(); it != node->edges.end(); ++it) {
-        char edge_key = it->first;
-        child = it->second;
+    for (auto const& edge : node->edges) {
+        char edge_key = edge.first;
+        child = edge.second;
 
         int edge_offset = (i * 5) + offset + node_size;
         unsigned int node_id, flagged_id;
@@ -74,7 +74,8 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
         i++;
     }
 
-    for (size_t i = 0; i < nodes_to_process.size(); i++) {
+    size_t num_nodes = nodes_to_process.size();
+    for (size_t i = 0; i < num_nodes; i++) {
         write_node(nodes_to_process[i], output, edge_locs, node_locs, node_size);
     }
 }
@@ -99,7 +100,8 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
         cout << "Rewriting offsets...\n";
     }
 
-    for (size_t i = 0; i < edge_locs.size(); i++) {
+    size_t num_edges = edge_locs.size();
+    for (size_t i = 0; i < num_edges; i++) {
         unsigned int edge_offset = edge_locs[i];
 
         unsigned int flagged_id;
@@ -143,12 +145,12 @@ bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_st
     time_t start = time(NULL);
 
     while (std::getline(*input_stream, word)) {
-        if (!word.length()) {
+        if (word.empty()) {
             continue;
         }
         word_count += 1;
 
-        if (!dawg.insert(word)) return false;
+        if (!dawg.insert(word.data(),word.size())) return false;
 
         if (verbose && word_count % 100 == 0) {
             cout << word_count << "\r";

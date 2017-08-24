@@ -2,18 +2,7 @@ var binding = require("./lib/jsdawg.node");
 var assert = require("assert");
 var Symbol = require("es6-symbol");
 
-
-var EDGE_COUNT_ONLY = 1,
-    INCLUDES_ENTRY_COUNT = 5;
-
-binding.Dawg.prototype.toCompactDawg = function(preserveCounts) {
-    preserveCounts = preserveCounts || false;
-    return new CompactDawg(this.toCompactDawgBuffer(preserveCounts));
-}
-
-var CompactDawg = function(buf) {
-    this.data = buf;
-
+function validate(buf) {
     // validate data
     var magic = buf.slice(0, 4).toString();
     var version = buf[4];
@@ -34,23 +23,27 @@ var CompactDawg = function(buf) {
     assert(offsetWidth == 4, "only dawgs with four-byte offset widths are supported");
     assert(size == actualSize, "dawg size is not as expected");
     assert(checksum == actualChecksum, "dawg checksum is not correct");
+    return buf;
 }
 
-CompactDawg.prototype.lookupPrefix = function(prefix) {
-    return binding.compactDawgBufferLookup(this.data, prefix) != 0;
+var EDGE_COUNT_ONLY = 1,
+    INCLUDES_ENTRY_COUNT = 5;
+
+binding.Dawg.prototype.toCompactDawg = function(preserveCounts) {
+    return new binding.CompactDawg(validate(this.toCompactDawgBuffer(preserveCounts)));
 }
 
-CompactDawg.prototype.lookup = function(prefix) {
-    return binding.compactDawgBufferLookup(this.data, prefix) == 2;
+binding.CompactDawg.prototype.lookupPrefix = function(prefix) {
+    return this._lookup(prefix) != 0;
 }
 
-CompactDawg.prototype.prefixContinuations = function(prefix, maxDepth) {
-    return binding.prefixContinuations(this.data, prefix, maxDepth);
+binding.CompactDawg.prototype.lookup = function(prefix) {
+    return this._lookup(prefix) == 2;
 }
 
-CompactDawg.prototype.iterator = function(prefix) {
+binding.CompactDawg.prototype.iterator = function(prefix) {
     // implement the ES6 iterator pattern
-    var it = prefix ? new binding.CompactDawgIterator(this.data, prefix) : new binding.CompactDawgIterator(this.data);
+    var it = prefix ? this._iterator(prefix) : this._iterator();
     return {
         next: prefix ?
             function() {
@@ -66,9 +59,9 @@ CompactDawg.prototype.iterator = function(prefix) {
     }
 }
 
-CompactDawg.prototype[Symbol.iterator] = CompactDawg.prototype.iterator;
+binding.CompactDawg.prototype[Symbol.iterator] = binding.CompactDawg.prototype.iterator;
 
 module.exports = {
     Dawg: binding.Dawg,
-    CompactDawg: CompactDawg
+    CompactDawg: binding.CompactDawg
 };
