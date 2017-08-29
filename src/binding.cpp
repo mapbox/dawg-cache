@@ -154,6 +154,7 @@ typedef struct {
     bool final;
     int skipped;
     int child_count;
+    char* match_string;
 } dawg_search_result;
 
 dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
@@ -207,6 +208,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
             output.final = false;
             output.skipped = -1;
             output.child_count = -1;
+            output.match_string = NULL;
             return output;
         }
     }
@@ -216,6 +218,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
     output.final = node_final;
     output.skipped = -1;
     output.child_count = -1;
+    output.match_string = NULL;
     return output;
 }
 
@@ -276,6 +279,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
             output.final = false;
             output.skipped = -1;
             output.child_count = -1;
+            output.match_string = NULL;
             return output;
         }
     }
@@ -285,6 +289,76 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
     output.final = node_final;
     output.child_count = skip_count;
     output.skipped = node_final ? skipped - 1 : skipped;
+    output.match_string = NULL;
+    return output;
+}
+
+dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, unsigned int node_size) {
+    unsigned int flagged_offset, node_final = 0, tmp_final = 0;
+    int node_offset = 0, tmp_offset = 0, skipped = 0, skip_count = 0, edge_count, edge_offset;
+    bool match = false;
+    unsigned char search_letter, letter;
+    std::string match_string = "";
+
+    dawg_search_result output;
+    int remaining = index + 1;
+
+    while (true) {
+        match = false;
+
+        if (node_offset != -1) {
+            edge_count = (int) data[node_offset];
+
+            if (edge_count > 0) {
+                for (int guess = 0; guess < edge_count; guess++) {
+                    edge_offset = node_offset + node_size + (5 * guess);
+                    letter = data[edge_offset];
+
+                    // peek into the node we didn't end up taking to determine the skip count
+                    memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+
+                    tmp_offset = (int)(flagged_offset & FINAL_MASK);
+                    tmp_final = flagged_offset & IS_FINAL_FLAG;
+
+                    if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
+                        skip_count = 1;
+                    } else {
+                        skip_count = *(reinterpret_cast<int32_t*>(&data[tmp_offset + 1]));
+                    }
+
+                    if (skip_count < remaining) {
+                        remaining -= skip_count;
+                        continue;
+                    } else {
+                        match_string += letter;
+                        break;
+                    }
+                }
+            }
+        }
+        memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+
+        node_offset = (int)(flagged_offset & FINAL_MASK);
+        node_final = flagged_offset & IS_FINAL_FLAG;
+
+        skip_count = node_offset > 0 ? *(reinterpret_cast<int32_t*>(&data[node_offset + 1])) : 0;
+        if (node_final) skipped += 1;
+
+        if (node_offset == 0) node_offset = -1;
+
+        if (remaining == 1 && node_final) {
+            break;
+        }
+    }
+
+    output.node_offset = node_offset;
+    output.found = true;
+    output.final = node_final;
+    output.child_count = skip_count;
+    output.skipped = index;
+
+    output.match_string = new char [match_string.length() + 1];
+    std::strcpy(output.match_string, match_string.c_str());
     return output;
 }
 
@@ -515,46 +589,50 @@ class CompactDawg : public Nan::ObjectWrap {
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
         if (!js_val.IsEmpty()) {
-            v8::Local<v8::String> js_str = js_val->ToString();
-            if (!js_str.IsEmpty()) {
-                int js_str_len = js_str->Length();
-                if (js_str_len > 0) {
-                    // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
-                    // but I've not enabled this yet as it does not clearly increase performance
-                    const int flags =
-                        v8::String::NO_NULL_TERMINATION | v8::String::REPLACE_INVALID_UTF8;
-                    // max possible decoded utf length
-                    // much faster than calling `str->Utf8Length();` to get exact length
-                    // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
-                    std::size_t len = (3 * js_str_len) + 1;
-                    if (len > arena_size) {
-                        char * heap_string = static_cast<char *>(std::malloc(len));
-                        std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), 0, flags);
-                        heap_string[utf8_length] = '\0';
-                        if (obj->node_size == INCLUDES_ENTRY_COUNT) {
-                            result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
+            if (js_val->IsNumber()) {
+                result = inverse_compact_dawg_search((unsigned char*)obj->data, js_val->IntegerValue(), obj->node_size);
+            } else {
+                v8::Local<v8::String> js_str = js_val->ToString();
+                if (!js_str.IsEmpty()) {
+                    int js_str_len = js_str->Length();
+                    if (js_str_len > 0) {
+                        // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
+                        // but I've not enabled this yet as it does not clearly increase performance
+                        const int flags =
+                            v8::String::NO_NULL_TERMINATION | v8::String::REPLACE_INVALID_UTF8;
+                        // max possible decoded utf length
+                        // much faster than calling `str->Utf8Length();` to get exact length
+                        // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
+                        std::size_t len = (3 * js_str_len) + 1;
+                        if (len > arena_size) {
+                            char * heap_string = static_cast<char *>(std::malloc(len));
+                            std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), 0, flags);
+                            heap_string[utf8_length] = '\0';
+                            if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                                result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
+                            } else {
+                                result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
+                            }
+                            if (result.found) {
+                                return_val = result.final ? 2 : 1;
+                            } else {
+                                return_val = 0;
+                            }
+                            free(heap_string);
                         } else {
-                            result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
-                        }
-                        if (result.found) {
-                            return_val = result.final ? 2 : 1;
-                        } else {
-                            return_val = 0;
-                        }
-                        free(heap_string);
-                    } else {
-                        char arena[arena_size];
-                        std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), 0, flags);
-                        arena[utf8_length] = '\0';
-                        if (obj->node_size == INCLUDES_ENTRY_COUNT) {
-                            result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
-                        } else {
-                            result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
-                        }
-                        if (result.found) {
-                            return_val = result.final ? 2 : 1;
-                        } else {
-                            return_val = 0;
+                            char arena[arena_size];
+                            std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), 0, flags);
+                            arena[utf8_length] = '\0';
+                            if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                                result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
+                            } else {
+                                result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
+                            }
+                            if (result.found) {
+                                return_val = result.final ? 2 : 1;
+                            } else {
+                                return_val = 0;
+                            }
                         }
                     }
                 }
@@ -565,6 +643,11 @@ class CompactDawg : public Nan::ObjectWrap {
             out->Set(0, Nan::New(return_val));
             out->Set(1, Nan::New(result.skipped));
             out->Set(2, Nan::New(result.child_count));
+
+            if (result.match_string != NULL) {
+                out->Set(3, Nan::New(result.match_string).ToLocalChecked());
+                delete result.match_string;
+            }
             info.GetReturnValue().Set(out);
             return;
         }
