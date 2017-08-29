@@ -41,6 +41,24 @@ binding.CompactDawg.prototype.lookup = function(prefix) {
     return this._lookup(prefix) == 2;
 }
 
+binding.CompactDawg.prototype.lookupPrefixCounts = function(prefix) {
+    let result = this._lookup(prefix);
+    if (result[0] != 0) {
+        return {found: true, index: result[1], suffixCount: result[2]};
+    } else {
+        return {found: false}
+    }
+}
+
+binding.CompactDawg.prototype.lookupCounts = function(prefix) {
+    let result = this._lookup(prefix);
+    if (result[0] == 2) {
+        return {found: true, index: result[1], suffixCount: result[2]};
+    } else {
+        return {found: false}
+    }
+}
+
 binding.CompactDawg.prototype.iterator = function(prefix) {
     // implement the ES6 iterator pattern
     var it = prefix ? this._iterator(prefix) : this._iterator();

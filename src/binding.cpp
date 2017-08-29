@@ -152,6 +152,8 @@ typedef struct {
     int node_offset;
     bool found;
     bool final;
+    int skipped;
+    int child_count;
 } dawg_search_result;
 
 dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
@@ -203,6 +205,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
             output.node_offset = -1;
             output.found = false;
             output.final = false;
+            output.skipped = -1;
+            output.child_count = -1;
             return output;
         }
     }
@@ -210,6 +214,77 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
     output.node_offset = node_offset;
     output.found = true;
     output.final = node_final;
+    output.skipped = -1;
+    output.child_count = -1;
+    return output;
+}
+
+dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
+    unsigned int flagged_offset, node_final = 0, tmp_final = 0;
+    int node_offset = 0, tmp_offset = 0, skipped = 0, skip_count = 0, edge_count, edge_offset;
+    bool match = false;
+    unsigned char search_letter, letter;
+
+    dawg_search_result output;
+
+    for (size_t i = 0; i < search_length; i++) {
+        // binary search over the node edges
+        match = false;
+        search_letter = search[i];
+
+        if (node_offset != -1) {
+            edge_count = (int) data[node_offset];
+
+            if (edge_count > 0) {
+                for (int guess = 0; guess < edge_count; guess++) {
+                    edge_offset = node_offset + node_size + (5 * guess);
+                    letter = data[edge_offset];
+                    if (letter == search_letter) {
+                        match = true;
+                        break;
+                    }
+                    else {
+                        // peek into the node we didn't end up taking to determine the skip count
+                        memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+
+                        tmp_offset = (int)(flagged_offset & FINAL_MASK);
+                        tmp_final = flagged_offset & IS_FINAL_FLAG;
+
+                        if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
+                            if (tmp_final) skipped += 1;
+                        } else {
+                            skip_count = *(reinterpret_cast<int32_t*>(&data[tmp_offset + 1]));
+                            skipped += skip_count;
+                        }
+                    }
+                }
+            }
+        }
+        if (match) {
+            memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
+
+            node_offset = (int)(flagged_offset & FINAL_MASK);
+            node_final = flagged_offset & IS_FINAL_FLAG;
+
+            skip_count = node_offset > 0 ? *(reinterpret_cast<int32_t*>(&data[node_offset + 1])) : 0;
+            if (node_final) skipped += 1;
+
+            if (node_offset == 0) node_offset = -1;
+        } else {
+            output.node_offset = -1;
+            output.found = false;
+            output.final = false;
+            output.skipped = -1;
+            output.child_count = -1;
+            return output;
+        }
+    }
+
+    output.node_offset = node_offset;
+    output.found = true;
+    output.final = node_final;
+    output.child_count = skip_count;
+    output.skipped = node_final ? skipped - 1 : skipped;
     return output;
 }
 
@@ -436,6 +511,7 @@ class CompactDawg : public Nan::ObjectWrap {
         CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
         std::uint32_t return_val = 1;
+        dawg_search_result result;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
         if (!js_val.IsEmpty()) {
@@ -455,7 +531,11 @@ class CompactDawg : public Nan::ObjectWrap {
                         char * heap_string = static_cast<char *>(std::malloc(len));
                         std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), 0, flags);
                         heap_string[utf8_length] = '\0';
-                        dawg_search_result result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
+                        if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                            result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
+                        } else {
+                            result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
+                        }
                         if (result.found) {
                             return_val = result.final ? 2 : 1;
                         } else {
@@ -466,7 +546,11 @@ class CompactDawg : public Nan::ObjectWrap {
                         char arena[arena_size];
                         std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), 0, flags);
                         arena[utf8_length] = '\0';
-                        dawg_search_result result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
+                        if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                            result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
+                        } else {
+                            result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
+                        }
                         if (result.found) {
                             return_val = result.final ? 2 : 1;
                         } else {
@@ -476,6 +560,15 @@ class CompactDawg : public Nan::ObjectWrap {
                 }
             }
         }
+        if (return_val != 0 && result.skipped != -1) {
+            v8::Local<v8::Array> out = Nan::New<v8::Array>();
+            out->Set(0, Nan::New(return_val));
+            out->Set(1, Nan::New(result.skipped));
+            out->Set(2, Nan::New(result.child_count));
+            info.GetReturnValue().Set(out);
+            return;
+        }
+
         info.GetReturnValue().Set(return_val);
         return;
     }
