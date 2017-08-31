@@ -294,10 +294,10 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
 }
 
 dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, unsigned int node_size) {
-    unsigned int flagged_offset, node_final = 0, tmp_final = 0;
-    int node_offset = 0, tmp_offset = 0, skipped = 0, skip_count = 0, edge_count, edge_offset;
+    unsigned int flagged_offset, node_final = 0;
+    int node_offset = 0, tmp_offset = 0, skip_count = 0, edge_count, edge_offset;
     bool match = false;
-    unsigned char search_letter, letter;
+    unsigned char letter;
     std::string match_string = "";
 
     dawg_search_result output;
@@ -318,8 +318,6 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
                     memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
                     tmp_offset = (int)(flagged_offset & FINAL_MASK);
-                    tmp_final = flagged_offset & IS_FINAL_FLAG;
-
                     if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
                         skip_count = 1;
                     } else {
@@ -341,12 +339,11 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
         node_offset = (int)(flagged_offset & FINAL_MASK);
         node_final = flagged_offset & IS_FINAL_FLAG;
 
-        skip_count = node_offset > 0 ? *(reinterpret_cast<int32_t*>(&data[node_offset + 1])) : 0;
-        if (node_final) skipped += 1;
+        if (node_final) remaining -= 1;
 
         if (node_offset == 0) node_offset = -1;
 
-        if (remaining == 1 && node_final) {
+        if (remaining == 0 && node_final) {
             break;
         }
     }
@@ -591,6 +588,7 @@ class CompactDawg : public Nan::ObjectWrap {
         if (!js_val.IsEmpty()) {
             if (js_val->IsNumber()) {
                 result = inverse_compact_dawg_search((unsigned char*)obj->data, js_val->IntegerValue(), obj->node_size);
+                return_val = 2;
             } else {
                 v8::Local<v8::String> js_str = js_val->ToString();
                 if (!js_str.IsEmpty()) {

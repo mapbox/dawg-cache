@@ -222,14 +222,13 @@ test('Compact DAWG test with embedded counts', function(t) {
 
     var inverseLookup = true;
     var inverseText = true;
-    for (var i = 1; i < words.length; i++) {
+    for (var i = 0; i < words.length; i++) {
         let match = compactDawg.lookupCounts(i);
         inverseLookup = inverseLookup && match.found;
         inverseText = inverseText && (match.text == words[i]);
-        //console.log(compactDawg._lookup(i), words[i]);
     }
-    //t.assert(inverseLookup, "compact dawg lookup by index retrieves all words");
-    //t.assert(inverseText, "compact dawg retrieved word text is correct");
+    t.assert(inverseLookup, "compact dawg lookup by index retrieves all words");
+    t.assert(inverseText, "compact dawg retrieved word text is correct");
 
     var prefixLookup = true;
     var prefixIndexes = true;
