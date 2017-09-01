@@ -127,7 +127,7 @@ class JSDawg : public Nan::ObjectWrap {
 
         bool preserveCounts = false;
         if (info.Length() > 0) {
-            preserveCounts = info[0].As<Boolean>()->Value();
+            preserveCounts = info[0]->BooleanValue();
         }
 
         std::vector<unsigned char>* output = new std::vector<unsigned char>();
