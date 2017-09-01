@@ -43,7 +43,7 @@ binding.CompactDawg.prototype.lookup = function(prefix) {
 
 binding.CompactDawg.prototype.lookupPrefixCounts = function(prefix) {
     let result = this._lookup(prefix);
-    if (result[0] != 0) {
+    if (result != 0) {
         return {found: true, index: result[1], suffixCount: result[2], text: result[3] ? result[3] : prefix};
     } else {
         return {found: false}
@@ -52,7 +52,7 @@ binding.CompactDawg.prototype.lookupPrefixCounts = function(prefix) {
 
 binding.CompactDawg.prototype.lookupCounts = function(prefix) {
     let result = this._lookup(prefix);
-    if (result[0] == 2) {
+    if (result != 0 && result[0] == 2) {
         return {found: true, index: result[1], suffixCount: result[2], text: result[3] ? result[3] : prefix};
     } else {
         return {found: false}
