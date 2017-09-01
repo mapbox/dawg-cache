@@ -213,7 +213,7 @@ test('Compact DAWG test with embedded counts', function(t) {
     var exactLookup = true;
     var exactIndexes = true;
     for (var i = 0; i < words.length; i++) {
-        let match = compactDawg.lookupCounts(words[i]);
+        var match = compactDawg.lookupCounts(words[i]);
         exactLookup = exactLookup && match.found;
         exactIndexes = exactIndexes && (match.index == i);
     }
@@ -223,7 +223,7 @@ test('Compact DAWG test with embedded counts', function(t) {
     var inverseLookup = true;
     var inverseText = true;
     for (var i = 0; i < words.length; i++) {
-        let match = compactDawg.lookupCounts(i);
+        var match = compactDawg.lookupCounts(i);
         inverseLookup = inverseLookup && match.found;
         inverseText = inverseText && (match.text == words[i]);
     }
@@ -233,7 +233,7 @@ test('Compact DAWG test with embedded counts', function(t) {
     var prefixLookup = true;
     var prefixIndexes = true;
     for (var i = 0; i < words.length; i++) {
-        let match = compactDawg.lookupPrefixCounts(words[i]);
+        var match = compactDawg.lookupPrefixCounts(words[i]);
         prefixLookup = prefixLookup && match.found;
         prefixIndexes = prefixIndexes && (match.index == i);
     }
@@ -246,7 +246,7 @@ test('Compact DAWG test with embedded counts', function(t) {
         if (words[i].length == 1) continue;
 
         var prefix = words[i].substring(0, words[i].length - 1);
-        let match = compactDawg.lookupPrefixCounts(prefix);
+        var match = compactDawg.lookupPrefixCounts(prefix);
 
         // here we would expect either the indexes to match, or the index that is returned
         // to be lower and to point to a word that shares a prefix
@@ -260,16 +260,16 @@ test('Compact DAWG test with embedded counts', function(t) {
     t.assert(prefixLookup, "compact dawg contains prefixes of all words as prefixes");
     t.assert(prefixIndexes, "compact dawg prefixes have expected indexes");
 
-    let testMatch = compactDawg.lookupPrefixCounts("test");
+    var testMatch = compactDawg.lookupPrefixCounts("test");
     t.assert(testMatch.found, "'test' found");
     t.assert(testMatch.index == words.indexOf("test"), "'test' index is correct");
     t.assert(testMatch.suffixCount == 82, "'test' has 82 suffixes");
 
-    let blea_idx;
+    var blea_idx;
     for (blea_idx = 0; blea_idx < words.length; blea_idx++) {
         if (words[blea_idx].substr(0, 4) == 'blea') break;
     }
-    let blea_count = 0;
+    var blea_count = 0;
     while (words[blea_idx + blea_count].substr(0, 4) == 'blea') blea_count += 1;
 
     testMatch = compactDawg.lookupPrefixCounts("blea");

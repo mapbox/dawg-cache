@@ -15,10 +15,10 @@ matrix:
      # Linux
      - os: linux
        compiler: clang
-       env: NODE_VERSION="0.10.38" PUBLISHABLE=true
+       env: NODE_VERSION="4.4.2" PUBLISHABLE=true
      - os: linux
        compiler: clang
-       env: NODE_VERSION="4.4.2" PUBLISHABLE=true
+       env: NODE_VERSION="6.11.2" PUBLISHABLE=true
      # Debug build (only for testing)
      - os: linux
        compiler: clang
@@ -26,10 +26,10 @@ matrix:
      # OS X
      - os: osx
        compiler: clang
-       env: NODE_VERSION="0.10.38" PUBLISHABLE=true
+       env: NODE_VERSION="4.4.2" PUBLISHABLE=true
      - os: osx
        compiler: clang
-       env: NODE_VERSION="4.4.2" PUBLISHABLE=true
+       env: NODE_VERSION="6.11.2" PUBLISHABLE=true
 
 env:
   global:
