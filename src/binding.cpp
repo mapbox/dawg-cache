@@ -148,7 +148,7 @@ class JSDawg : public Nan::ObjectWrap {
     }
 };
 
-typedef struct {
+typedef struct dawg_search_result {
     int node_offset;
     bool found;
     bool final;
@@ -157,13 +157,17 @@ typedef struct {
     char* match_string;
 } dawg_search_result;
 
+const struct dawg_search_result DAWG_SEARCH_RESULT_NOTFOUND = {
+    -1, false, false, -1, -1, NULL
+};
+
 dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
     unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, edge_count, edge_offset, min, max, guess;
     bool match = false;
     unsigned char search_letter, letter;
 
-    dawg_search_result output;
+    dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
 
     for (size_t i = 0; i < search_length; i++) {
         // binary search over the node edges
@@ -203,12 +207,6 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
 
             if (node_offset == 0) node_offset = -1;
         } else {
-            output.node_offset = -1;
-            output.found = false;
-            output.final = false;
-            output.skipped = -1;
-            output.child_count = -1;
-            output.match_string = NULL;
             return output;
         }
     }
@@ -228,7 +226,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
     bool match = false;
     unsigned char search_letter, letter;
 
-    dawg_search_result output;
+    dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
 
     for (size_t i = 0; i < search_length; i++) {
         // binary search over the node edges
@@ -274,12 +272,6 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
 
             if (node_offset == 0) node_offset = -1;
         } else {
-            output.node_offset = -1;
-            output.found = false;
-            output.final = false;
-            output.skipped = -1;
-            output.child_count = -1;
-            output.match_string = NULL;
             return output;
         }
     }
@@ -300,7 +292,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     unsigned char letter;
     std::string match_string = "";
 
-    dawg_search_result output;
+    dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
     int remaining = index + 1;
 
     while (true) {
@@ -582,7 +574,7 @@ class CompactDawg : public Nan::ObjectWrap {
         CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
         std::uint32_t return_val = 1;
-        dawg_search_result result;
+        dawg_search_result result = DAWG_SEARCH_RESULT_NOTFOUND;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
         if (!js_val.IsEmpty()) {
