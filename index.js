@@ -38,7 +38,8 @@ binding.CompactDawg.prototype.lookupPrefix = function(prefix) {
 }
 
 binding.CompactDawg.prototype.lookup = function(prefix) {
-    return this._lookup(prefix) == 2;
+    var lookup = this._lookup(prefix);
+    return lookup == 2 || lookup[0] == 2;
 }
 
 binding.CompactDawg.prototype.lookupPrefixCounts = function(prefix) {
