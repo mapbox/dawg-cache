@@ -19,10 +19,10 @@ test('DAWG test invalid usage', function (t) {
     t.throws(function() { dawg.insert('') }, /empty string passed to insert/, "validates inserted value");
     dawg.finish();
     var compactDawg = dawg.toCompactDawg();
-    t.assert(compactDawg.lookup() == '');
-    t.assert(compactDawg.lookupPrefix() == '');
-    t.assert(compactDawg.lookup({}) == '');
-    t.assert(compactDawg.lookupPrefix({}) == '');
+    t.assert(compactDawg.lookup() == '', 'lookup empty string');
+    t.assert(compactDawg.lookupPrefix() == '', 'lookup empty string prfix');
+    t.assert(compactDawg.lookup({}) == '', 'lookup object');
+    t.assert(compactDawg.lookupPrefix({}) == '', 'lookup object prefix');
     t.end();
 });
 
