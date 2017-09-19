@@ -175,12 +175,13 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
         search_letter = search[i];
 
         if (node_offset != -1) {
+            //how many edges does it have
             edge_count = (int) data[node_offset];
 
             if (edge_count > 0) {
                 min = 0;
                 max = edge_count - 1;
-
+                //binary search over the edges, to find the edge that we are searching for
                 while (min <= max) {
                     guess = (min + max) >> 1;
                     edge_offset = node_offset + node_size + (5 * guess);
@@ -201,7 +202,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
         }
         if (match) {
             memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
-
+            //we go to the next node
             node_offset = (int)(flagged_offset & FINAL_MASK);
             node_final = flagged_offset & IS_FINAL_FLAG;
 
@@ -286,6 +287,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
 }
 
 dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, unsigned int node_size) {
+    //same kind of walk as the previous two, specifically how do i find the 67th element?
     unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, tmp_offset = 0, skip_count = 0, edge_count, edge_offset;
     bool match = false;
