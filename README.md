@@ -9,6 +9,8 @@ This is a package that implements two variants of a [directed acyclic word graph
 
 [insert visual pipeline]
 
+JSDAWG --> 
+
 dawg-cache begins with 2 different implementations of the same conceptual structure. When we create the structure there is a buildtime conversion made of C++ objects.
 The compact version is a formulation of the structure that fits in a single contiguous piece of memory. essentially one giant buffer, allowing us to dump the whole thing to disk and read it back to memory that is really slow.
 
@@ -33,4 +35,3 @@ Some of the search/traversal are on both for testing purposes.
 ## Resources
     - [What's a DAWG?](https://en.wikipedia.org/wiki/Deterministic_acyclic_finite_state_automaton)
     - [NAN](https://github.com/nodejs/nan)
-    -
