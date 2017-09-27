@@ -10,13 +10,13 @@ var jsdawg = require("../index");
 
 test('DAWG test invalid usage', function (t) {
     var dawg = new jsdawg.Dawg();
-    t.throws(function() { dawg.insert(null) }, /first argument must be a String/, "validates inserted value");
-    t.throws(function() { dawg.insert({}) }, /first argument must be a String/, "validates inserted value");
-    t.throws(function() { dawg.insert(1.0) }, /first argument must be a String/, "validates inserted value");
-    t.throws(function() { dawg.insert(function(){}) }, /first argument must be a String/, "validates inserted value");
-    t.throws(function() { dawg.lookup(null) }, /first argument must be a String/, "validates inserted value");
-    t.throws(function() { dawg.lookupPrefix(null) }, /first argument must be a String/, "validates inserted value");
-    t.throws(function() { dawg.insert('') }, /empty string passed to insert/, "validates inserted value");
+    t.throws(function() { dawg.insert(null) }, /first argument must be a String/, "validates inserted null value");
+    t.throws(function() { dawg.insert({}) }, /first argument must be a String/, "validates inserted {} value");
+    t.throws(function() { dawg.insert(1.0) }, /first argument must be a String/, "validates inserted 1.0 value");
+    t.throws(function() { dawg.insert(function(){}) }, /first argument must be a String/, "validates inserted function value");
+    t.throws(function() { dawg.lookup(null) }, /first argument must be a String/, "validates null lookup value");
+    t.throws(function() { dawg.lookupPrefix(null) }, /first argument must be a String/, "validates null lookupPrefix value");
+    t.throws(function() { dawg.insert('') }, /empty string passed to insert/, "validates inserted empty string value");
     dawg.finish();
     var compactDawg = dawg.toCompactDawg();
     t.assert(compactDawg.lookup() == '', 'lookup empty string');
@@ -67,42 +67,21 @@ test('Read-write DAWG test', function(t) {
     }
     t.assert(exactLookup, "dawg contains all words");
 
-    var prefixLookup = true;
-    for (var i = 0; i < words.length; i++) {
-        prefixLookup = prefixLookup && dawg.lookupPrefix(words[i]);
-    }
-    t.assert(prefixLookup, "dawg contains all words as prefixes");
-
-    var prefixLookup = true;
-    for (var i = 0; i < words.length; i++) {
-        if (words[i].length == 1) continue;
-
-        var prefix = words[i].substring(0, words[i].length - 1);
-        prefixLookup = prefixLookup && dawg.lookupPrefix(prefix);
-    }
-    t.assert(prefixLookup, "dawg contains prefixes of all words as prefixes");
-
     var lookupFailure = true;
     for (var i = 0; i < words.length; i++) {
-        if (dawg.lookup(words[i] + "qzz") || dawg.lookupPrefix(words[i] + "qzz")) console.log(words[i]);
-        lookupFailure = lookupFailure && (!dawg.lookup(words[i] + "qzz"));
-        lookupFailure = lookupFailure && (!dawg.lookupPrefix(words[i] + "qzz"));
+        if (dawg.lookup(words[i] + "abq") || dawg.lookupPrefix(words[i] + "abq")) console.log(words[i]);
+        lookupFailure = lookupFailure && (!dawg.lookup(words[i] + "abq"));
+        lookupFailure = lookupFailure && (!dawg.lookupPrefix(words[i] + "abq"));
     }
-    t.assert(lookupFailure, "dawg does not contain any words with 'qzz' added to the end as term or prefix");
+    t.assert(lookupFailure, "dawg does not contain any words with 'abq' added to the end as term or prefix");
 
-    var prefixLookup = true;
+    var lookupActual = true;
     for (var i = 0; i < words.length; i++) {
-        if (words[i].length == 1) continue;
-
-        var prefix = words[i].substring(0, words[i].length - 1);
-        // if this prefix is also a word, skip
-        if (wordSet.contains(prefix)) continue;
-        prefixLookup = prefixLookup && (!dawg.lookup(prefix));
+        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log(words[i]);
+        lookupActual = lookupActual && (!dawg.lookup(words[i] + "abc"));
+        lookupActual = lookupActual && (!dawg.lookupPrefix(words[i] + "abc"));
     }
-    t.assert(prefixLookup, "dawg does not contain prefixes of all words as terms");
-
-    t.assert(!dawg.lookup(""), "dawg does not contain the empty string as a term");
-    t.assert(dawg.lookupPrefix(""), "dawg does contain the empty string as a prefix");
+    t.assert(lookupActual, "dawg does not contain any words with 'abc' added to the end as term or prefix");
 
     t.end();
 });
