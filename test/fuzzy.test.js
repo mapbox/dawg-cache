@@ -58,8 +58,6 @@ test('Read-write DAWG test', function(t) {
         dawg.insert(words[i]);
     }
     t.pass("dawg created");
-    console.log('** edgeCount: ', dawg.edgeCount());
-    console.log('** nodeCount: ', dawg.nodeCount());
 
     var exactLookup = true;
     for (var i = 0; i < words.length; i++) {
@@ -73,6 +71,8 @@ test('Read-write DAWG test', function(t) {
         lookupFailure = lookupFailure && (!dawg.lookup(words[i] + "abq"));
         lookupFailure = lookupFailure && (!dawg.lookupPrefix(words[i] + "abq"));
     }
+    console.log('** edgeCount: ', dawg.edgeCount("abq"));
+    console.log('** nodeCount: ', dawg.nodeCount("abq"));
     t.assert(lookupFailure, "dawg does not contain any words with 'abq' added to the end as term or prefix");
 
     var lookupActual = true;
