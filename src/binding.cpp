@@ -640,7 +640,7 @@ class CompactDawg : public Nan::ObjectWrap {
 
             if (result.match_string != NULL) {
                 out->Set(3, Nan::New(result.match_string).ToLocalChecked());
-                delete result.match_string;
+                delete [] result.match_string;
             }
             info.GetReturnValue().Set(out);
             return;
