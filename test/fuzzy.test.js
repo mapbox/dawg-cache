@@ -34,9 +34,9 @@ test('Prepare for DAWG test', function (t) {
     ['test_words.txt.gz', 'nonlatin_words.txt.gz'].forEach(function(file) {
         q.defer(function(callback) {
             request.get({url: "http://mapbox.s3.amazonaws.com/apendleton/" + file, encoding: null}, function(err, response, body) {
-                if (err) throw "S3 fetch failed";
+                if (err) throw new Error ("S3 fetch failed");
                 zlib.gunzip(body, function(err, data) {
-                    if (err) throw ("Zlib decompression failed: " + err);
+                    if (err) throw new Error("Zlib decompression failed: " + err);
                     resp = data.toString();
                     words = words.concat(resp.trim().split("\n"));
                     callback();
