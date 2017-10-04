@@ -254,7 +254,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
                         if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
                             if (tmp_final) skipped += 1;
                         } else {
-                            skip_count = *(reinterpret_cast<int32_t*>(&data[tmp_offset + 1]));
+                            memcpy(&skip_count, &(data[tmp_offset + 1]), sizeof(int32_t));
                             skipped += skip_count;
                         }
                     }
@@ -317,7 +317,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
                     if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
                         skip_count = 1;
                     } else {
-                        skip_count = *(reinterpret_cast<int32_t*>(&data[tmp_offset + 1]));
+                        memcpy(&skip_count, &(data[tmp_offset + 1]), sizeof(int32_t));
                     }
 
                     if (skip_count < remaining) {
