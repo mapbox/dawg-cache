@@ -148,17 +148,17 @@ class JSDawg : public Nan::ObjectWrap {
     }
 };
 
-typedef struct dawg_search_result {
+struct dawg_search_result {
     int node_offset;
     bool found;
     bool final;
     int skipped;
     int child_count;
     char* match_string;
-} dawg_search_result;
+};
 
 const struct dawg_search_result DAWG_SEARCH_RESULT_NOTFOUND = {
-    -1, false, false, -1, -1, NULL
+    -1, false, false, -1, -1, nullptr
 };
 
 dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
@@ -267,7 +267,11 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
             node_offset = (int)(flagged_offset & FINAL_MASK);
             node_final = flagged_offset & IS_FINAL_FLAG;
 
-            skip_count = node_offset > 0 ? *(reinterpret_cast<int32_t*>(&data[node_offset + 1])) : 0;
+            if (node_offset > 0) {
+                memcpy(&skip_count, &(data[node_offset + 1]), sizeof(int32_t));
+            } else {
+                skip_count = 0;
+            }
             if (node_final) skipped += 1;
 
             if (node_offset == 0) node_offset = -1;
