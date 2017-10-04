@@ -77,7 +77,7 @@ test('Read-write DAWG test', function(t) {
 
     var lookupActual = true;
     for (var i = 0; i < words.length; i++) {
-        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log(words[i]);
+        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log('words[i]',words[i]);
         lookupActual = lookupActual && (!dawg.lookup(words[i] + "abc"));
         lookupActual = lookupActual && (!dawg.lookupPrefix(words[i] + "abc"));
     }
