@@ -11,7 +11,7 @@ using Nan::New;
 using Nan::Set;
 using Nan::ObjectWrap;
 
-void free_dawg_vector(char*  /*data*/, void* hint)
+void free_dawg_vector(char* /*data*/, void* hint)
 {
     delete reinterpret_cast<std::vector<unsigned char>*>(hint);
 }
@@ -216,17 +216,15 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                         match = true;
                         break;
                     }
-                    
-                    
-                        if (letter < search_letter)
-                        {
-                            min = guess + 1;
-                        }
-                        else
-                        {
-                            max = guess - 1;
-                        }
-                    
+
+                    if (letter < search_letter)
+                    {
+                        min = guess + 1;
+                    }
+                    else
+                    {
+                        max = guess - 1;
+                    }
                 }
             }
         }
@@ -237,8 +235,10 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
             node_offset = static_cast<int>(flagged_offset & FINAL_MASK);
             node_final = flagged_offset & IS_FINAL_FLAG;
 
-            if (node_offset == 0) { node_offset = -1;
-}
+            if (node_offset == 0)
+            {
+                node_offset = -1;
+            }
         }
         else
         {
@@ -285,25 +285,25 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
                         match = true;
                         break;
                     }
-                    
-                    
-                        // peek into the node we didn't end up taking to determine the skip count
-                        memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
-                        tmp_offset = static_cast<int>(flagged_offset & FINAL_MASK);
-                        tmp_final = flagged_offset & IS_FINAL_FLAG;
+                    // peek into the node we didn't end up taking to determine the skip count
+                    memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
-                        if (tmp_offset == 0 || static_cast<int>(data[tmp_offset]) == 0)
+                    tmp_offset = static_cast<int>(flagged_offset & FINAL_MASK);
+                    tmp_final = flagged_offset & IS_FINAL_FLAG;
+
+                    if (tmp_offset == 0 || static_cast<int>(data[tmp_offset]) == 0)
+                    {
+                        if (tmp_final != 0u)
                         {
-                            if (tmp_final != 0u) { skipped += 1;
-}
+                            skipped += 1;
                         }
-                        else
-                        {
-                            memcpy(&skip_count, &(data[tmp_offset + 1]), sizeof(int32_t));
-                            skipped += skip_count;
-                        }
-                    
+                    }
+                    else
+                    {
+                        memcpy(&skip_count, &(data[tmp_offset + 1]), sizeof(int32_t));
+                        skipped += skip_count;
+                    }
                 }
             }
         }
@@ -322,11 +322,15 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
             {
                 skip_count = 0;
             }
-            if (node_final != 0u) { skipped += 1;
-}
+            if (node_final != 0u)
+            {
+                skipped += 1;
+            }
 
-            if (node_offset == 0) { node_offset = -1;
-}
+            if (node_offset == 0)
+            {
+                node_offset = -1;
+            }
         }
         else
         {
@@ -387,11 +391,9 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
                         remaining -= skip_count;
                         continue;
                     }
-                    
-                    
-                        match_string += letter;
-                        break;
-                    
+
+                    match_string += letter;
+                    break;
                 }
             }
         }
@@ -400,11 +402,15 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
         node_offset = static_cast<int>(flagged_offset & FINAL_MASK);
         node_final = flagged_offset & IS_FINAL_FLAG;
 
-        if (node_final != 0u) { remaining -= 1;
-}
+        if (node_final != 0u)
+        {
+            remaining -= 1;
+        }
 
-        if (node_offset == 0) { node_offset = -1;
-}
+        if (node_offset == 0)
+        {
+            node_offset = -1;
+        }
 
         if (remaining == 0 && (node_final != 0u))
         {
@@ -596,8 +602,10 @@ class CompactIterator : public Nan::ObjectWrap
                 else
                 {
                     // otherwise we'll move back up the tree
-                    if (!current_word->empty()) { current_word->pop_back();
-}
+                    if (!current_word->empty())
+                    {
+                        current_word->pop_back();
+                    }
                 }
             }
             else
@@ -612,8 +620,7 @@ class CompactIterator : public Nan::ObjectWrap
         {
             info.GetReturnValue().Set(Nan::New(output).ToLocalChecked());
         }
-
-           }
+    }
 };
 
 class CompactDawg : public Nan::ObjectWrap
@@ -776,7 +783,7 @@ class CompactDawg : public Nan::ObjectWrap
         }
 
         info.GetReturnValue().Set(return_val);
-   }
+    }
 
     static NAN_METHOD(Iterator)
     {
@@ -801,7 +808,7 @@ class CompactDawg : public Nan::ObjectWrap
                                           argv)
                                           .ToLocalChecked());
         }
-           }
+    }
 
     static inline Nan::Persistent<v8::Function>& constructor()
     {
