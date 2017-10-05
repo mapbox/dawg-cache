@@ -2,7 +2,8 @@
 #include "dawg.cpp"
 #include <iostream>
 #include <memory>
-#include <time.h>
+#include <ctime>
+#include <cstring>
 #include <unordered_map>
 
 using namespace std;
