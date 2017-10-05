@@ -1,9 +1,11 @@
 #include "builder.cpp"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
-int main(int argc, char* argv[]) {
-    if (argc != 3) {
+int main(int argc, char* argv[])
+{
+    if (argc != 3)
+    {
         std::cout << "Wrong number of arguments";
         return -1;
     }

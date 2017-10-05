@@ -1,6 +1,6 @@
+#include "builder.cpp"
 #include <nan.h>
 #include <string>
-#include "builder.cpp"
 
 using v8::FunctionTemplate;
 using v8::Handle;
@@ -12,87 +12,103 @@ using Nan::New;
 using Nan::Set;
 using Nan::ObjectWrap;
 
-void free_dawg_vector(char* data, void* hint) {
+void free_dawg_vector(char* data, void* hint)
+{
     delete (std::vector<unsigned char>*)hint;
 }
 
-struct node_position {
+struct node_position
+{
     unsigned int node_offset;
     unsigned int edge_idx;
     bool visited;
-    node_position(unsigned int off,unsigned int idx, bool v) :
-      node_offset(off),
-      edge_idx(idx),
-      visited(v) {}
+    node_position(unsigned int off, unsigned int idx, bool v) : node_offset(off),
+                                                                edge_idx(idx),
+                                                                visited(v) {}
     // non-copyable
-    node_position( node_position && ) = default;
-    node_position& operator=(node_position && ) = default;
-    node_position( node_position const& ) = delete;
-    node_position& operator=(node_position const& ) = delete;
+    node_position(node_position&&) = default;
+    node_position& operator=(node_position&&) = default;
+    node_position(node_position const&) = delete;
+    node_position& operator=(node_position const&) = delete;
 };
 
-class JSDawg : public Nan::ObjectWrap {
-    public:
-        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
-            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
-            tpl->SetClassName(Nan::New("Dawg").ToLocalChecked());
-            tpl->InstanceTemplate()->SetInternalFieldCount(1);
+class JSDawg : public Nan::ObjectWrap
+{
+  public:
+    static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target)
+    {
+        v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+        tpl->SetClassName(Nan::New("Dawg").ToLocalChecked());
+        tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-            SetPrototypeMethod(tpl, "insert", Insert);
-            SetPrototypeMethod(tpl, "finish", Finish);
-            SetPrototypeMethod(tpl, "lookup", Lookup);
-            SetPrototypeMethod(tpl, "lookupPrefix", LookupPrefix);
-            SetPrototypeMethod(tpl, "edgeCount", EdgeCount);
-            SetPrototypeMethod(tpl, "nodeCount", NodeCount);
-            SetPrototypeMethod(tpl, "toCompactDawgBuffer", ToCompactDawgBuffer);
+        SetPrototypeMethod(tpl, "insert", Insert);
+        SetPrototypeMethod(tpl, "finish", Finish);
+        SetPrototypeMethod(tpl, "lookup", Lookup);
+        SetPrototypeMethod(tpl, "lookupPrefix", LookupPrefix);
+        SetPrototypeMethod(tpl, "edgeCount", EdgeCount);
+        SetPrototypeMethod(tpl, "nodeCount", NodeCount);
+        SetPrototypeMethod(tpl, "toCompactDawgBuffer", ToCompactDawgBuffer);
 
-            constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
-            Nan::Set(
-                target,
-                Nan::New("Dawg").ToLocalChecked(),
-                Nan::GetFunction(tpl).ToLocalChecked()
-            );
-        }
-    private:
-        explicit JSDawg() {}
-        ~JSDawg() {}
-        Dawg dawg_;
+        constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+        Nan::Set(
+            target,
+            Nan::New("Dawg").ToLocalChecked(),
+            Nan::GetFunction(tpl).ToLocalChecked());
+    }
 
-    static NAN_METHOD(New) {
-        if (info.IsConstructCall()) {
-            JSDawg *obj = new JSDawg();
+  private:
+    explicit JSDawg() {}
+    ~JSDawg() {}
+    Dawg dawg_;
+
+    static NAN_METHOD(New)
+    {
+        if (info.IsConstructCall())
+        {
+            JSDawg* obj = new JSDawg();
             obj->Wrap(info.This());
             info.GetReturnValue().Set(info.This());
-        } else {
+        }
+        else
+        {
             v8::Local<v8::Function> cons = Nan::New(constructor());
             info.GetReturnValue().Set(cons->NewInstance());
         }
     }
 
-    static NAN_METHOD(Insert) {
-        if (!info[0]->IsString()) {
+    static NAN_METHOD(Insert)
+    {
+        if (!info[0]->IsString())
+        {
             return Nan::ThrowTypeError("first argument must be a String");
         }
         String::Utf8Value utf8_value(info[0].As<String>());
         int len = utf8_value.length();
-        if (len <= 0) {
+        if (len <= 0)
+        {
             Nan::ThrowError("empty string passed to insert");
-        } else {
+        }
+        else
+        {
             JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
             bool success = obj->dawg_.insert(*utf8_value, static_cast<std::size_t>(len));
-            if (!success) {
+            if (!success)
+            {
                 Nan::ThrowError("Entries must be inserted in order");
             }
         }
     }
 
-    static NAN_METHOD(Finish) {
+    static NAN_METHOD(Finish)
+    {
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         obj->dawg_.finish();
     }
 
-    static NAN_METHOD(Lookup) {
-        if (!info[0]->IsString()) {
+    static NAN_METHOD(Lookup)
+    {
+        if (!info[0]->IsString())
+        {
             return Nan::ThrowTypeError("first argument must be a String");
         }
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
@@ -101,8 +117,10 @@ class JSDawg : public Nan::ObjectWrap {
         info.GetReturnValue().Set(found);
     }
 
-    static NAN_METHOD(LookupPrefix) {
-        if (!info[0]->IsString()) {
+    static NAN_METHOD(LookupPrefix)
+    {
+        if (!info[0]->IsString())
+        {
             return Nan::ThrowTypeError("first argument must be a String");
         }
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
@@ -112,21 +130,25 @@ class JSDawg : public Nan::ObjectWrap {
         info.GetReturnValue().Set(found);
     }
 
-    static NAN_METHOD(EdgeCount) {
+    static NAN_METHOD(EdgeCount)
+    {
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         info.GetReturnValue().Set(obj->dawg_.edge_count());
     }
 
-    static NAN_METHOD(NodeCount) {
+    static NAN_METHOD(NodeCount)
+    {
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
         info.GetReturnValue().Set(obj->dawg_.node_count());
     }
 
-    static NAN_METHOD(ToCompactDawgBuffer) {
+    static NAN_METHOD(ToCompactDawgBuffer)
+    {
         JSDawg* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
 
         bool preserveCounts = false;
-        if (info.Length() > 0) {
+        if (info.Length() > 0)
+        {
             preserveCounts = info[0]->BooleanValue();
         }
 
@@ -137,18 +159,19 @@ class JSDawg : public Nan::ObjectWrap {
             (char*)(&((*output)[0])),
             output->size(),
             free_dawg_vector,
-            output
-        );
+            output);
         info.GetReturnValue().Set(out.ToLocalChecked());
     }
 
-    static inline Nan::Persistent<v8::Function> & constructor() {
+    static inline Nan::Persistent<v8::Function>& constructor()
+    {
         static Nan::Persistent<v8::Function> my_constructor;
         return my_constructor;
     }
 };
 
-struct dawg_search_result {
+struct dawg_search_result
+{
     int node_offset;
     bool found;
     bool final;
@@ -158,10 +181,10 @@ struct dawg_search_result {
 };
 
 const struct dawg_search_result DAWG_SEARCH_RESULT_NOTFOUND = {
-    -1, false, false, -1, -1, nullptr
-};
+    -1, false, false, -1, -1, nullptr};
 
-dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
+dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size)
+{
     unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, edge_count, edge_offset, min, max, guess;
     bool match = false;
@@ -169,44 +192,56 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
 
     dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
 
-    for (size_t i = 0; i < search_length; i++) {
+    for (size_t i = 0; i < search_length; i++)
+    {
         // binary search over the node edges
         match = false;
         search_letter = search[i];
 
-        if (node_offset != -1) {
-            edge_count = (int) data[node_offset];
+        if (node_offset != -1)
+        {
+            edge_count = (int)data[node_offset];
 
-            if (edge_count > 0) {
+            if (edge_count > 0)
+            {
                 min = 0;
                 max = edge_count - 1;
 
-                while (min <= max) {
+                while (min <= max)
+                {
                     guess = (min + max) >> 1;
                     edge_offset = node_offset + node_size + (5 * guess);
                     letter = data[edge_offset];
-                    if (letter == search_letter) {
+                    if (letter == search_letter)
+                    {
                         match = true;
                         break;
                     }
-                    else {
-                        if (letter < search_letter) {
+                    else
+                    {
+                        if (letter < search_letter)
+                        {
                             min = guess + 1;
-                        } else {
+                        }
+                        else
+                        {
                             max = guess - 1;
                         }
                     }
                 }
             }
         }
-        if (match) {
+        if (match)
+        {
             memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
             node_offset = (int)(flagged_offset & FINAL_MASK);
             node_final = flagged_offset & IS_FINAL_FLAG;
 
             if (node_offset == 0) node_offset = -1;
-        } else {
+        }
+        else
+        {
             return output;
         }
     }
@@ -220,7 +255,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, unsigned char* searc
     return output;
 }
 
-dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size) {
+dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned char* search, size_t search_length, unsigned int node_size)
+{
     unsigned int flagged_offset, node_final = 0, tmp_final = 0;
     int node_offset = 0, tmp_offset = 0, skipped = 0, skip_count = 0, edge_count, edge_offset;
     bool match = false;
@@ -228,32 +264,41 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
 
     dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
 
-    for (size_t i = 0; i < search_length; i++) {
+    for (size_t i = 0; i < search_length; i++)
+    {
         // binary search over the node edges
         match = false;
         search_letter = search[i];
 
-        if (node_offset != -1) {
-            edge_count = (int) data[node_offset];
+        if (node_offset != -1)
+        {
+            edge_count = (int)data[node_offset];
 
-            if (edge_count > 0) {
-                for (int guess = 0; guess < edge_count; guess++) {
+            if (edge_count > 0)
+            {
+                for (int guess = 0; guess < edge_count; guess++)
+                {
                     edge_offset = node_offset + node_size + (5 * guess);
                     letter = data[edge_offset];
-                    if (letter == search_letter) {
+                    if (letter == search_letter)
+                    {
                         match = true;
                         break;
                     }
-                    else {
+                    else
+                    {
                         // peek into the node we didn't end up taking to determine the skip count
                         memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
                         tmp_offset = (int)(flagged_offset & FINAL_MASK);
                         tmp_final = flagged_offset & IS_FINAL_FLAG;
 
-                        if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
+                        if (tmp_offset == 0 || (int)data[tmp_offset] == 0)
+                        {
                             if (tmp_final) skipped += 1;
-                        } else {
+                        }
+                        else
+                        {
                             memcpy(&skip_count, &(data[tmp_offset + 1]), sizeof(int32_t));
                             skipped += skip_count;
                         }
@@ -261,21 +306,27 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
                 }
             }
         }
-        if (match) {
+        if (match)
+        {
             memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
             node_offset = (int)(flagged_offset & FINAL_MASK);
             node_final = flagged_offset & IS_FINAL_FLAG;
 
-            if (node_offset > 0) {
+            if (node_offset > 0)
+            {
                 memcpy(&skip_count, &(data[node_offset + 1]), sizeof(int32_t));
-            } else {
+            }
+            else
+            {
                 skip_count = 0;
             }
             if (node_final) skipped += 1;
 
             if (node_offset == 0) node_offset = -1;
-        } else {
+        }
+        else
+        {
             return output;
         }
     }
@@ -289,7 +340,8 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, unsigned cha
     return output;
 }
 
-dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, unsigned int node_size) {
+dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, unsigned int node_size)
+{
     unsigned int flagged_offset, node_final = 0;
     int node_offset = 0, tmp_offset = 0, skip_count = 0, edge_count, edge_offset;
     bool match = false;
@@ -299,14 +351,18 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
     int remaining = index + 1;
 
-    while (true) {
+    while (true)
+    {
         match = false;
 
-        if (node_offset != -1) {
-            edge_count = (int) data[node_offset];
+        if (node_offset != -1)
+        {
+            edge_count = (int)data[node_offset];
 
-            if (edge_count > 0) {
-                for (int guess = 0; guess < edge_count; guess++) {
+            if (edge_count > 0)
+            {
+                for (int guess = 0; guess < edge_count; guess++)
+                {
                     edge_offset = node_offset + node_size + (5 * guess);
                     letter = data[edge_offset];
 
@@ -314,16 +370,22 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
                     memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
                     tmp_offset = (int)(flagged_offset & FINAL_MASK);
-                    if (tmp_offset == 0 || (int) data[tmp_offset] == 0) {
+                    if (tmp_offset == 0 || (int)data[tmp_offset] == 0)
+                    {
                         skip_count = 1;
-                    } else {
+                    }
+                    else
+                    {
                         memcpy(&skip_count, &(data[tmp_offset + 1]), sizeof(int32_t));
                     }
 
-                    if (skip_count < remaining) {
+                    if (skip_count < remaining)
+                    {
                         remaining -= skip_count;
                         continue;
-                    } else {
+                    }
+                    else
+                    {
                         match_string += letter;
                         break;
                     }
@@ -339,7 +401,8 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
 
         if (node_offset == 0) node_offset = -1;
 
-        if (remaining == 0 && node_final) {
+        if (remaining == 0 && node_final)
+        {
             break;
         }
     }
@@ -350,104 +413,123 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     output.child_count = skip_count;
     output.skipped = index;
 
-    output.match_string = new char [match_string.length() + 1];
+    output.match_string = new char[match_string.length() + 1];
     std::strcpy(output.match_string, match_string.c_str());
     return output;
 }
 
 constexpr std::size_t arena_size = 1024;
 
-class CompactIterator : public Nan::ObjectWrap {
-    public:
-        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
-            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
-            tpl->SetClassName(Nan::New("CompactDawgIterator").ToLocalChecked());
-            tpl->InstanceTemplate()->SetInternalFieldCount(1);
+class CompactIterator : public Nan::ObjectWrap
+{
+  public:
+    static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target)
+    {
+        v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+        tpl->SetClassName(Nan::New("CompactDawgIterator").ToLocalChecked());
+        tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-            SetPrototypeMethod(tpl, "next", Next);
+        SetPrototypeMethod(tpl, "next", Next);
 
-            constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
-            Nan::Set(
-                target,
-                Nan::New("CompactDawgIterator").ToLocalChecked(),
-                Nan::GetFunction(tpl).ToLocalChecked()
-            );
-        }
+        constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+        Nan::Set(
+            target,
+            Nan::New("CompactDawgIterator").ToLocalChecked(),
+            Nan::GetFunction(tpl).ToLocalChecked());
+    }
 
-        static inline Nan::Persistent<v8::Function> & constructor() {
-            static Nan::Persistent<v8::Function> my_constructor;
-            return my_constructor;
-        }
+    static inline Nan::Persistent<v8::Function>& constructor()
+    {
+        static Nan::Persistent<v8::Function> my_constructor;
+        return my_constructor;
+    }
 
-    private:
-        explicit CompactIterator() {}
-        ~CompactIterator() { persistentBuffer.Reset(); }
-        Nan::Persistent<v8::Object> persistentBuffer;
-        unsigned char* data;
-        std::vector<node_position> stack;
-        std::vector<unsigned char> current_word;
-        bool return_empty;
-        unsigned int node_size;
+  private:
+    explicit CompactIterator() {}
+    ~CompactIterator() { persistentBuffer.Reset(); }
+    Nan::Persistent<v8::Object> persistentBuffer;
+    unsigned char* data;
+    std::vector<node_position> stack;
+    std::vector<unsigned char> current_word;
+    bool return_empty;
+    unsigned int node_size;
 
-    static NAN_METHOD(New) {
-        if (info.IsConstructCall()) {
-            if (info.Length() != 1 && info.Length() != 2) {
+    static NAN_METHOD(New)
+    {
+        if (info.IsConstructCall())
+        {
+            if (info.Length() != 1 && info.Length() != 2)
+            {
                 Nan::ThrowTypeError("Invalid number of arguments");
                 return;
             }
 
             v8::Local<v8::Object> bufferObj;
-            if (node::Buffer::HasInstance(info[0])) {
+            if (node::Buffer::HasInstance(info[0]))
+            {
                 bufferObj = info[0]->ToObject();
-            } else {
+            }
+            else
+            {
                 Nan::ThrowTypeError("Input must be a buffer");
                 return;
             }
 
-            CompactIterator *obj = new CompactIterator();
+            CompactIterator* obj = new CompactIterator();
             obj->Wrap(info.This());
             // store the buffer as a persistent
             obj->persistentBuffer.Reset(bufferObj);
             info.GetReturnValue().Set(info.This());
 
-            unsigned char* full_data = (unsigned char*) node::Buffer::Data(bufferObj);
+            unsigned char* full_data = (unsigned char*)node::Buffer::Data(bufferObj);
             obj->data = full_data + DAWG_HEADER_SIZE;
             obj->node_size = static_cast<unsigned int>(full_data[6]);
             obj->return_empty = false;
 
-            if (info.Length() == 2) {
+            if (info.Length() == 2)
+            {
                 // we're doing a prefix search, so find the prefix node and
                 // enqueue it if it exists
                 String::Utf8Value utf8_value(info[1].As<String>());
 
-                unsigned char* search = (unsigned char*) *utf8_value;
+                unsigned char* search = (unsigned char*)*utf8_value;
                 size_t search_length = utf8_value.length();
 
                 dawg_search_result result = compact_dawg_search(obj->data, search, search_length, obj->node_size);
 
-                if (result.found) {
-                    if (result.final) {
+                if (result.found)
+                {
+                    if (result.final)
+                    {
                         obj->return_empty = true;
                     }
-                    if (result.node_offset != -1) {
+                    if (result.node_offset != -1)
+                    {
                         obj->stack.emplace_back(result.node_offset, 0, false);
                     }
                 }
-            } else {
+            }
+            else
+            {
                 // enqueue the root if the structure isn't empty
-                if (obj->data[0] > 0) {
-                    obj->stack.emplace_back(0,0,false);
+                if (obj->data[0] > 0)
+                {
+                    obj->stack.emplace_back(0, 0, false);
                 }
             }
-        } else {
+        }
+        else
+        {
             Nan::ThrowTypeError("CompactDawgIterator needs to be called as a constructor");
         }
     }
 
-    static NAN_METHOD(Next) {
+    static NAN_METHOD(Next)
+    {
         CompactIterator* obj = Nan::ObjectWrap::Unwrap<CompactIterator>(info.This());
 
-        if (obj->return_empty) {
+        if (obj->return_empty)
+        {
             obj->return_empty = false;
             info.GetReturnValue().Set(Nan::New("").ToLocalChecked());
             return;
@@ -464,7 +546,8 @@ class CompactIterator : public Nan::ObjectWrap {
         std::string output;
         bool has_output = false;
 
-        while (stack->size() > 0 && !has_output) {
+        while (stack->size() > 0 && !has_output)
+        {
             node_position const& current_position = stack->back();
             // NOTE: since `pop_back()` below will invalidate iterators
             // we work with copies of the node_position data rather
@@ -480,39 +563,47 @@ class CompactIterator : public Nan::ObjectWrap {
             next_offset = (int)(flagged_offset & FINAL_MASK);
             next_final = flagged_offset & IS_FINAL_FLAG;
 
-            if (next_final && !cur_visited) {
+            if (next_final && !cur_visited)
+            {
                 has_output = true;
-                output = std::string(current_word->begin(), current_word->end()) + reinterpret_cast<char &>(letter);
+                output = std::string(current_word->begin(), current_word->end()) + reinterpret_cast<char&>(letter);
             }
 
-
-            if (next_offset == 0 || data[next_offset] == 0 || cur_visited) {
+            if (next_offset == 0 || data[next_offset] == 0 || cur_visited)
+            {
                 stack->pop_back();
 
-                if (stack->size() > 0) {
-                    node_position & latest_back = stack->back();
+                if (stack->size() > 0)
+                {
+                    node_position& latest_back = stack->back();
                     latest_back.visited = true;
                 }
 
-                edge_count = (int) data[cur_off];
-                if (cur_idx < edge_count - 1) {
+                edge_count = (int)data[cur_off];
+                if (cur_idx < edge_count - 1)
+                {
                     // done with the children, but still have siblings so move laterally
                     unsigned int next_position = cur_idx;
                     next_position++;
                     // add a copy to the stack
-                    stack->emplace_back(cur_off,next_position,false);
-                } else {
+                    stack->emplace_back(cur_off, next_position, false);
+                }
+                else
+                {
                     // otherwise we'll move back up the tree
                     if (current_word->size() > 0) current_word->pop_back();
                 }
-            } else {
+            }
+            else
+            {
                 // "recurse" down
-                stack->emplace_back(next_offset,0,false);
+                stack->emplace_back(next_offset, 0, false);
                 current_word->push_back(letter);
             }
         }
 
-        if (has_output) {
+        if (has_output)
+        {
             info.GetReturnValue().Set(Nan::New(output).ToLocalChecked());
         }
 
@@ -520,76 +611,93 @@ class CompactIterator : public Nan::ObjectWrap {
     }
 };
 
-class CompactDawg : public Nan::ObjectWrap {
-    public:
-        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
-            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
-            tpl->SetClassName(Nan::New("CompactDawg").ToLocalChecked());
-            tpl->InstanceTemplate()->SetInternalFieldCount(1);
-            SetPrototypeMethod(tpl, "_lookup", Lookup);
-            SetPrototypeMethod(tpl, "_iterator", Iterator);
-            constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
-            Nan::Set(
-                target,
-                Nan::New("CompactDawg").ToLocalChecked(),
-                Nan::GetFunction(tpl).ToLocalChecked()
-            );
-        }
-    private:
-        explicit CompactDawg(v8::Local<v8::Object> buf)
-          : data(node::Buffer::Data(buf) + DAWG_HEADER_SIZE),
-            len(node::Buffer::Length(buf)),
-            node_size(static_cast<unsigned int>(node::Buffer::Data(buf)[6])),
-            persistentBuffer() {
-              persistentBuffer.Reset(buf);
-          }
-        ~CompactDawg() { persistentBuffer.Reset(); }
-        char* data;
-        size_t len;
-        unsigned int node_size;
-        Nan::Persistent<v8::Object> persistentBuffer;
+class CompactDawg : public Nan::ObjectWrap
+{
+  public:
+    static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target)
+    {
+        v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+        tpl->SetClassName(Nan::New("CompactDawg").ToLocalChecked());
+        tpl->InstanceTemplate()->SetInternalFieldCount(1);
+        SetPrototypeMethod(tpl, "_lookup", Lookup);
+        SetPrototypeMethod(tpl, "_iterator", Iterator);
+        constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+        Nan::Set(
+            target,
+            Nan::New("CompactDawg").ToLocalChecked(),
+            Nan::GetFunction(tpl).ToLocalChecked());
+    }
 
-    static NAN_METHOD(New) {
-        if (info.IsConstructCall()) {
-            if (info.Length() != 1) {
+  private:
+    explicit CompactDawg(v8::Local<v8::Object> buf)
+        : data(node::Buffer::Data(buf) + DAWG_HEADER_SIZE),
+          len(node::Buffer::Length(buf)),
+          node_size(static_cast<unsigned int>(node::Buffer::Data(buf)[6])),
+          persistentBuffer()
+    {
+        persistentBuffer.Reset(buf);
+    }
+    ~CompactDawg() { persistentBuffer.Reset(); }
+    char* data;
+    size_t len;
+    unsigned int node_size;
+    Nan::Persistent<v8::Object> persistentBuffer;
+
+    static NAN_METHOD(New)
+    {
+        if (info.IsConstructCall())
+        {
+            if (info.Length() != 1)
+            {
                 Nan::ThrowTypeError("Invalid number of arguments");
                 return;
             }
 
             v8::Local<v8::Value> obj = info[0];
-            if (!obj->IsObject()) {
+            if (!obj->IsObject())
+            {
                 return Nan::ThrowTypeError("first argument must be a Buffer");
             }
 
-            if (!node::Buffer::HasInstance(obj)) {
+            if (!node::Buffer::HasInstance(obj))
+            {
                 Nan::ThrowTypeError("Input must be a buffer");
                 return;
             }
 
-            CompactDawg *dawg = new CompactDawg(obj->ToObject());
+            CompactDawg* dawg = new CompactDawg(obj->ToObject());
             dawg->Wrap(info.This());
             info.GetReturnValue().Set(info.This());
-        } else {
+        }
+        else
+        {
             Nan::ThrowTypeError("CompactDawg needs to be called as a constructor");
         }
     }
 
-    static NAN_METHOD(Lookup) {
+    static NAN_METHOD(Lookup)
+    {
         CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
         std::uint32_t return_val = 1;
         dawg_search_result result = DAWG_SEARCH_RESULT_NOTFOUND;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
-        if (!js_val.IsEmpty()) {
-            if (js_val->IsNumber()) {
+        if (!js_val.IsEmpty())
+        {
+            if (js_val->IsNumber())
+            {
                 result = inverse_compact_dawg_search((unsigned char*)obj->data, js_val->IntegerValue(), obj->node_size);
                 return_val = 2;
-            } else {
+            }
+            else
+            {
                 v8::Local<v8::String> js_str = js_val->ToString();
-                if (!js_str.IsEmpty()) {
+                if (!js_str.IsEmpty())
+                {
                     int js_str_len = js_str->Length();
-                    if (js_str_len > 0) {
+                    if (js_str_len > 0)
+                    {
                         // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
                         // but I've not enabled this yet as it does not clearly increase performance
                         const int flags =
@@ -598,33 +706,48 @@ class CompactDawg : public Nan::ObjectWrap {
                         // much faster than calling `str->Utf8Length();` to get exact length
                         // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
                         std::size_t len = (3 * js_str_len) + 1;
-                        if (len > arena_size) {
-                            char * heap_string = static_cast<char *>(std::malloc(len));
+                        if (len > arena_size)
+                        {
+                            char* heap_string = static_cast<char*>(std::malloc(len));
                             std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), 0, flags);
                             heap_string[utf8_length] = '\0';
-                            if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                            if (obj->node_size == INCLUDES_ENTRY_COUNT)
+                            {
                                 result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
-                            } else {
+                            }
+                            else
+                            {
                                 result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)heap_string, utf8_length, obj->node_size);
                             }
-                            if (result.found) {
+                            if (result.found)
+                            {
                                 return_val = result.final ? 2 : 1;
-                            } else {
+                            }
+                            else
+                            {
                                 return_val = 0;
                             }
                             free(heap_string);
-                        } else {
+                        }
+                        else
+                        {
                             char arena[arena_size];
                             std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), 0, flags);
                             arena[utf8_length] = '\0';
-                            if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                            if (obj->node_size == INCLUDES_ENTRY_COUNT)
+                            {
                                 result = counted_compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
-                            } else {
+                            }
+                            else
+                            {
                                 result = compact_dawg_search((unsigned char*)obj->data, (unsigned char*)arena, utf8_length, obj->node_size);
                             }
-                            if (result.found) {
+                            if (result.found)
+                            {
                                 return_val = result.final ? 2 : 1;
-                            } else {
+                            }
+                            else
+                            {
                                 return_val = 0;
                             }
                         }
@@ -632,15 +755,17 @@ class CompactDawg : public Nan::ObjectWrap {
                 }
             }
         }
-        if (return_val != 0 && result.skipped != -1) {
+        if (return_val != 0 && result.skipped != -1)
+        {
             v8::Local<v8::Array> out = Nan::New<v8::Array>();
             out->Set(0, Nan::New(return_val));
             out->Set(1, Nan::New(result.skipped));
             out->Set(2, Nan::New(result.child_count));
 
-            if (result.match_string != NULL) {
+            if (result.match_string != NULL)
+            {
                 out->Set(3, Nan::New(result.match_string).ToLocalChecked());
-                delete [] result.match_string;
+                delete[] result.match_string;
             }
             info.GetReturnValue().Set(out);
             return;
@@ -650,47 +775,57 @@ class CompactDawg : public Nan::ObjectWrap {
         return;
     }
 
-    static NAN_METHOD(Iterator) {
+    static NAN_METHOD(Iterator)
+    {
         CompactDawg* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Object> buf = Nan::New(obj->persistentBuffer);
 
-        if (info.Length() > 0) {
+        if (info.Length() > 0)
+        {
             v8::Local<v8::Value> argv[2] = {buf, info[0]};
             info.GetReturnValue().Set(Nan::NewInstance(
-                Nan::New(CompactIterator::constructor()),
-                2,
-                argv
-            ).ToLocalChecked());
-        } else {
+                                          Nan::New(CompactIterator::constructor()),
+                                          2,
+                                          argv)
+                                          .ToLocalChecked());
+        }
+        else
+        {
             v8::Local<v8::Value> argv[1] = {buf};
             info.GetReturnValue().Set(Nan::NewInstance(
-                Nan::New(CompactIterator::constructor()),
-                1,
-                argv
-            ).ToLocalChecked());
+                                          Nan::New(CompactIterator::constructor()),
+                                          1,
+                                          argv)
+                                          .ToLocalChecked());
         }
         return;
     }
 
-    static inline Nan::Persistent<v8::Function> & constructor() {
+    static inline Nan::Persistent<v8::Function>& constructor()
+    {
         static Nan::Persistent<v8::Function> my_constructor;
         return my_constructor;
     }
 };
 
-NAN_METHOD(Crc32c) {
+NAN_METHOD(Crc32c)
+{
     Nan::HandleScope scope;
     uint32_t crc;
 
-    if (info.Length() != 1) {
+    if (info.Length() != 1)
+    {
         Nan::ThrowTypeError("Invalid number of arguments");
         return;
     }
 
-    if (node::Buffer::HasInstance(info[0])) {
+    if (node::Buffer::HasInstance(info[0]))
+    {
         v8::Local<v8::Object> buf = info[0]->ToObject();
-        crc = crc32c((const char *)node::Buffer::Data(buf), (size_t)node::Buffer::Length(buf));
-    } else {
+        crc = crc32c((const char*)node::Buffer::Data(buf), (size_t)node::Buffer::Length(buf));
+    }
+    else
+    {
         Nan::ThrowTypeError("Input must be a buffer");
         return;
     }
@@ -698,11 +833,12 @@ NAN_METHOD(Crc32c) {
     info.GetReturnValue().Set(Nan::New<v8::Uint32>(crc));
 }
 
-static NAN_MODULE_INIT(Init) {
+static NAN_MODULE_INIT(Init)
+{
     JSDawg::Init(target);
     CompactDawg::Init(target);
     CompactIterator::Init(target);
-    Nan::SetMethod(target,"crc32c",Crc32c);
+    Nan::SetMethod(target, "crc32c", Crc32c);
 }
 
 NODE_MODULE(jsdawg, Init)
