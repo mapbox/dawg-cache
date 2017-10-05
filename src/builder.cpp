@@ -1,9 +1,9 @@
 #include "crc32c.hpp"
 #include "dawg.cpp"
+#include <cstring>
+#include <ctime>
 #include <iostream>
 #include <memory>
-#include <ctime>
-#include <cstring>
 #include <unordered_map>
 
 using namespace std;

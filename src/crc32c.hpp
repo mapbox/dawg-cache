@@ -1,8 +1,8 @@
 #ifndef DAWG_CRC32C_HEADER
 #define DAWG_CRC32C_HEADER 1
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 
 static const uint32_t crc32cLookup[256] = {
     0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB,
