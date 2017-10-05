@@ -28,12 +28,17 @@ fi
 if [[ ! -f build/compile_commands.json ]]; then
     # We need to clean otherwise when we make the project
     # will will not see all the compile commands
+    ls -l
     make clean
+    ls -l
     rm -rf node_modules
     # Create the build directory to put the compile_commands in
     # We do this first to ensure it is there to start writing to
     # immediately (make make not create it right away)
     mkdir -p build
+    echo "running make"
+    make || true
+    make clean
     # Run make, pipe the output to the generate_compile_commands.py
     # and drop them in a place that clang-tidy will automatically find them
     make | scripts/generate_compile_commands.py > build/compile_commands.json
