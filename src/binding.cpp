@@ -850,4 +850,4 @@ static NAN_MODULE_INIT(Init)
     Nan::SetMethod(target, "crc32c", Crc32c);
 }
 
-NODE_MODULE(jsdawg, Init)
+NODE_MODULE(jsdawg, Init) // NOLINT
