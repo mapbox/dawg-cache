@@ -186,7 +186,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
 {
     unsigned int flagged_offset, node_final = 0;
     bool match = false;
-    int node_offset = 0, edge_count = 0, edge_offset =0 , min = 0, max = 0, guess = 0;
+    int node_offset = 0, edge_count = 0, edge_offset = 0, min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
 
     dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
@@ -458,8 +458,8 @@ class CompactIterator : public Nan::ObjectWrap
     // non copyable/movable
     CompactIterator(CompactIterator const&) = delete;
     CompactIterator& operator=(CompactIterator const&) = delete;
-    CompactIterator(CompactIterator &&) = delete;
-    CompactIterator& operator=(CompactIterator &&) = delete;
+    CompactIterator(CompactIterator&&) = delete;
+    CompactIterator& operator=(CompactIterator&&) = delete;
 
   private:
     explicit CompactIterator() = default;
@@ -650,8 +650,8 @@ class CompactDawg : public Nan::ObjectWrap
     // non copyable/movable
     CompactDawg(CompactDawg const&) = delete;
     CompactDawg& operator=(CompactDawg const&) = delete;
-    CompactDawg(CompactDawg &&) = delete;
-    CompactDawg& operator=(CompactDawg &&) = delete;
+    CompactDawg(CompactDawg&&) = delete;
+    CompactDawg& operator=(CompactDawg&&) = delete;
 
   private:
     explicit CompactDawg(v8::Local<v8::Object> buf)
