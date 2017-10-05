@@ -171,16 +171,16 @@ class JSDawg : public Nan::ObjectWrap
 
 struct dawg_search_result
 {
+    std::string match_string;
     int node_offset;
     bool found;
     bool final;
     int skipped;
     int child_count;
-    char* match_string;
 };
 
 const struct dawg_search_result DAWG_SEARCH_RESULT_NOTFOUND = {
-    -1, false, false, -1, -1, nullptr};
+    "", -1, false, false, -1, -1};
 
 dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size)
 {
@@ -251,7 +251,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     output.final = (node_final != 0u);
     output.skipped = -1;
     output.child_count = -1;
-    output.match_string = nullptr;
+    output.match_string.clear();
     return output;
 }
 
@@ -343,7 +343,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
     output.final = (node_final != 0u);
     output.child_count = skip_count;
     output.skipped = node_final != 0u ? skipped - 1 : skipped;
-    output.match_string = nullptr;
+    output.match_string.clear();
     return output;
 }
 
@@ -423,9 +423,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     output.final = (node_final != 0u);
     output.child_count = skip_count;
     output.skipped = index;
-
-    output.match_string = new char[match_string.length() + 1];
-    std::strcpy(output.match_string, match_string.c_str());
+    output.match_string = match_string;
     return output;
 }
 
@@ -744,10 +742,9 @@ class CompactDawg : public Nan::ObjectWrap
             out->Set(1, Nan::New(result.skipped));
             out->Set(2, Nan::New(result.child_count));
 
-            if (result.match_string != nullptr)
+            if (!result.match_string.empty())
             {
                 out->Set(3, Nan::New(result.match_string).ToLocalChecked());
-                delete[] result.match_string;
             }
             info.GetReturnValue().Set(out);
             return;
