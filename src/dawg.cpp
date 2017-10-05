@@ -6,8 +6,22 @@
 #include <vector>
 #include <memory>
 
-class DawgNode {
+class DawgNode : public Nan::ObjectWrap {
     public:
+        static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
+            v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+            tpl->SetClassName(Nan::New("DawgDawgNode").ToLocalChecked());
+            tpl->InstanceTemplate()->SetInternalFieldCount(1);
+
+            SetPrototypeMethod(tpl, "numReachable", numReachable);
+
+            constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+            Nan::Set(
+                target,
+                Nan::New("Dawg").ToLocalChecked(),
+                Nan::GetFunction(tpl).ToLocalChecked()
+            );
+        }
         unsigned int id;
         bool final;
         std::map<unsigned char, std::shared_ptr<DawgNode> > edges;
@@ -35,6 +49,27 @@ class DawgNode {
         out.pop_back();
         return out;
     }
+
+    private:
+        explicit DawgNode() {}
+        ~DawgNode() {}
+        DawgDawgNode dawgdawgnode_;
+
+        static NAN_METHOD(New) {
+            if (info.IsConstructCall()) {
+                DawgNode *obj = new DawgNode();
+                obj->Wrap(info.This());
+                info.GetReturnValue().Set(info.This());
+            } else {
+                v8::Local<v8::Function> cons = Nan::New(constructor());
+                info.GetReturnValue().Set(cons->NewInstance());
+            }
+        }
+
+        static NAN_METHOD(numReachable) {
+            DawgNode* obj = Nan::ObjectWrap::Unwrap<DawgNode>(info.This());
+            info.GetReturnValue().Set(obj->dawgdawgnode_.num_reachable());
+        }
 };
 
 DawgNode::DawgNode() :
