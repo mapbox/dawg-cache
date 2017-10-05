@@ -802,7 +802,7 @@ NAN_METHOD(Crc32c)
     if (node::Buffer::HasInstance(info[0]))
     {
         v8::Local<v8::Object> buf = info[0]->ToObject();
-        crc = crc32c((const char*)node::Buffer::Data(buf), node::Buffer::Length(buf));
+        crc = crc32c(reinterpret_cast<unsigned char*>(node::Buffer::Data(buf)), node::Buffer::Length(buf));
     }
     else
     {
