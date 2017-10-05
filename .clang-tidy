@@ -1,5 +1,5 @@
 ---
-Checks:          '*,-cppcoreguidelines-pro-type-reinterpret-cast,-clang-analyzer-core.CallAndMessage'
+Checks:          '*,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-bounds-pointer-arithmetic'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '\/src\/'
 AnalyzeTemporaryDtors: false

@@ -25,8 +25,9 @@ struct node_position
                                                                 edge_idx(idx),
                                                                 visited(v) {}
     // non-copyable
-    node_position(node_position&&) = default;
-    node_position& operator=(node_position&&) = default;
+    node_position(node_position&&) noexcept = default;
+    node_position& operator=(node_position&&) noexcept = default; // NOLINT
+    ~node_position() noexcept = default;
     node_position(node_position const&) = delete;
     node_position& operator=(node_position const&) = delete;
 };
@@ -57,7 +58,6 @@ class JSDawg : public Nan::ObjectWrap
 
   private:
     explicit JSDawg() = default;
-    ~JSDawg() override = default;
     Dawg dawg_;
 
     static NAN_METHOD(New)
@@ -185,8 +185,8 @@ const struct dawg_search_result DAWG_SEARCH_RESULT_NOTFOUND = {
 dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size)
 {
     unsigned int flagged_offset, node_final = 0;
-    int node_offset = 0, edge_count, edge_offset, min, max, guess;
     bool match = false;
+    int node_offset = 0, edge_count = 0, edge_offset =0 , min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
 
     dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
@@ -258,7 +258,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
 dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size)
 {
     unsigned int flagged_offset, node_final = 0, tmp_final = 0;
-    int node_offset = 0, tmp_offset = 0, skipped = 0, skip_count = 0, edge_count, edge_offset;
+    int node_offset = 0, tmp_offset = 0, skipped = 0, skip_count = 0, edge_count = 0, edge_offset = 0;
     bool match = false;
     unsigned char search_letter, letter;
 
@@ -350,7 +350,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
 dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, unsigned int node_size)
 {
     unsigned int flagged_offset, node_final = 0;
-    int node_offset = 0, tmp_offset = 0, skip_count = 0, edge_count, edge_offset;
+    int node_offset = 0, tmp_offset = 0, skip_count = 0, edge_count = 0, edge_offset = 0;
     bool match = false;
     unsigned char letter;
     std::string match_string;
@@ -455,9 +455,16 @@ class CompactIterator : public Nan::ObjectWrap
         return my_constructor;
     }
 
+    // non copyable/movable
+    CompactIterator(CompactIterator const&) = delete;
+    CompactIterator& operator=(CompactIterator const&) = delete;
+    CompactIterator(CompactIterator &&) = delete;
+    CompactIterator& operator=(CompactIterator &&) = delete;
+
   private:
     explicit CompactIterator() = default;
     ~CompactIterator() override { persistentBuffer.Reset(); }
+
     Nan::Persistent<v8::Object> persistentBuffer;
     unsigned char* data{};
     std::vector<node_position> stack;
@@ -551,7 +558,7 @@ class CompactIterator : public Nan::ObjectWrap
         std::vector<unsigned char>* current_word = &(obj->current_word);
 
         unsigned int flagged_offset, next_final = 0;
-        unsigned int next_offset = 0, edge_count, edge_offset;
+        unsigned int next_offset = 0, edge_count = 0, edge_offset = 0;
         unsigned char letter;
 
         std::string output;
@@ -639,6 +646,12 @@ class CompactDawg : public Nan::ObjectWrap
             Nan::New("CompactDawg").ToLocalChecked(),
             Nan::GetFunction(tpl).ToLocalChecked());
     }
+
+    // non copyable/movable
+    CompactDawg(CompactDawg const&) = delete;
+    CompactDawg& operator=(CompactDawg const&) = delete;
+    CompactDawg(CompactDawg &&) = delete;
+    CompactDawg& operator=(CompactDawg &&) = delete;
 
   private:
     explicit CompactDawg(v8::Local<v8::Object> buf)
