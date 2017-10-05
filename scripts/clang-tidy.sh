@@ -39,6 +39,7 @@ if [[ ! -f build/compile_commands.json ]]; then
     echo "running make"
     make || true
     make clean
+    mkdir -p build
     # Run make, pipe the output to the generate_compile_commands.py
     # and drop them in a place that clang-tidy will automatically find them
     make | scripts/generate_compile_commands.py > build/compile_commands.json

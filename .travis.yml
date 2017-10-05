@@ -42,7 +42,6 @@ matrix:
   include:
     # Clang format build
     - os: linux
-      language: generic
       env: BUILDTYPE=debug
       node_js: 4
       # Overrides `install` to avoid initializing clang toolchain
