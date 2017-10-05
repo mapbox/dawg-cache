@@ -730,16 +730,15 @@ class CompactDawg : public Nan::ObjectWrap
                         std::size_t len = (3 * js_str_len) + 1;
                         if (len > arena_size)
                         {
-                            auto* heap_string = static_cast<char*>(std::malloc(len));
-                            std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), nullptr, flags);
-                            heap_string[utf8_length] = '\0';
+                            std::string arena(len,'\0');
+                            std::size_t utf8_length = js_str->WriteUtf8(&arena[0], static_cast<int>(len), nullptr, flags);
                             if (obj->node_size == INCLUDES_ENTRY_COUNT)
                             {
-                                result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(heap_string), utf8_length, obj->node_size);
+                                result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
                             }
                             else
                             {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(heap_string), utf8_length, obj->node_size);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
                             }
                             if (result.found)
                             {
@@ -749,7 +748,6 @@ class CompactDawg : public Nan::ObjectWrap
                             {
                                 return_val = 0;
                             }
-                            free(heap_string);
                         }
                         else
                         {
