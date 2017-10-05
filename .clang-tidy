@@ -1,5 +1,5 @@
 ---
-Checks:          '*'
+Checks:          '*,-cppcoreguidelines-pro-type-reinterpret-cast,-clang-analyzer-core.CallAndMessage'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '\/src\/'
 AnalyzeTemporaryDtors: false
