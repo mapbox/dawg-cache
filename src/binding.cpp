@@ -429,8 +429,6 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     return output;
 }
 
-constexpr std::size_t arena_size = 1024;
-
 class CompactIterator : public Nan::ObjectWrap
 {
   public:
@@ -716,65 +714,25 @@ class CompactDawg : public Nan::ObjectWrap
             }
             else
             {
-                v8::Local<v8::String> js_str = js_val->ToString();
-                if (!js_str.IsEmpty())
+                Nan::Utf8String utf8_value(js_val);
+                int utf8_length = utf8_value.length();
+                if (utf8_length > 0)
                 {
-                    int js_str_len = js_str->Length();
-                    if (js_str_len > 0)
+                    if (obj->node_size == INCLUDES_ENTRY_COUNT)
                     {
-                        // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
-                        // but I've not enabled this yet as it does not clearly increase performance
-                        const int flags =
-                            v8::String::NO_NULL_TERMINATION | v8::String::REPLACE_INVALID_UTF8;
-                        // max possible decoded utf length
-                        // much faster than calling `str->Utf8Length();` to get exact length
-                        // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
-                        std::size_t len = (3 * js_str_len) + 1;
-                        if (len > arena_size)
-                        {
-                            auto* heap_string = static_cast<char*>(std::malloc(len));
-                            std::size_t utf8_length = js_str->WriteUtf8(heap_string, static_cast<int>(len), nullptr, flags);
-                            heap_string[utf8_length] = '\0';
-                            if (obj->node_size == INCLUDES_ENTRY_COUNT)
-                            {
-                                result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(heap_string), utf8_length, obj->node_size);
-                            }
-                            else
-                            {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(heap_string), utf8_length, obj->node_size);
-                            }
-                            if (result.found)
-                            {
-                                return_val = result.final ? 2 : 1;
-                            }
-                            else
-                            {
-                                return_val = 0;
-                            }
-                            free(heap_string);
-                        }
-                        else
-                        {
-                            char arena[arena_size];
-                            std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), nullptr, flags);
-                            arena[utf8_length] = '\0';
-                            if (obj->node_size == INCLUDES_ENTRY_COUNT)
-                            {
-                                result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
-                            }
-                            else
-                            {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
-                            }
-                            if (result.found)
-                            {
-                                return_val = result.final ? 2 : 1;
-                            }
-                            else
-                            {
-                                return_val = 0;
-                            }
-                        }
+                        result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(*utf8_value), utf8_length, obj->node_size);
+                    }
+                    else
+                    {
+                        result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(*utf8_value), utf8_length, obj->node_size);
+                    }
+                    if (result.found)
+                    {
+                        return_val = result.final ? 2 : 1;
+                    }
+                    else
+                    {
+                        return_val = 0;
                     }
                 }
             }
