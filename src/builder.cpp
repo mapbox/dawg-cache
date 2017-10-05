@@ -159,7 +159,7 @@ bool build_compact_dawg_full(std::istream* input_stream, std::ostream* output_st
     Dawg dawg;
     std::string word;
     int word_count = 0;
-    time_t start = time(NULL);
+    time_t start = time(nullptr);
 
     while (std::getline(*input_stream, word))
     {
@@ -186,7 +186,7 @@ bool build_compact_dawg_full(std::istream* input_stream, std::ostream* output_st
 
     if (verbose)
     {
-        cout << "Dawg creation took " << (time(NULL) - start) << " s\n";
+        cout << "Dawg creation took " << (time(nullptr) - start) << " s\n";
         cout << "Read " << word_count << " words into " << dawg.node_count() << " nodes and " << dawg.edge_count() << " edges\n";
     }
 
