@@ -727,7 +727,7 @@ class CompactDawg : public Nan::ObjectWrap
                         // max possible decoded utf length
                         // much faster than calling `str->Utf8Length();` to get exact length
                         // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
-                        std::size_t len = (3 * js_str_len) + 1;
+                        std::size_t len = (3 * static_cast<std::size_t>(js_str_len)) + 1;
                         if (len > arena_size)
                         {
                             std::string arena(len,'\0');
