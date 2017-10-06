@@ -194,7 +194,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     for (size_t i = 0; i < search_length; i++)
     {
         // binary search over the node edges
-        match = false;
+        match = false; // NOLINT (clang tidy thinks it is not used but it is)
         search_letter = search[i];
 
         if (node_offset != -1)
@@ -267,7 +267,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
     for (size_t i = 0; i < search_length; i++)
     {
         // binary search over the node edges
-        match = false;
+        match = false;  // NOLINT (clang tidy thinks it is not used but it is)
         search_letter = search[i];
 
         if (node_offset != -1)
@@ -360,7 +360,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
 
     while (true)
     {
-        match = false;
+        match = false; // NOLINT (clang tidy thinks it is not used but it is)
 
         if (node_offset != -1)
         {
@@ -734,7 +734,7 @@ class CompactDawg : public Nan::ObjectWrap
                         std::size_t len = (3 * static_cast<std::size_t>(js_str_len)) + 1;
                         if (len > arena_size)
                         {
-                            std::string arena(len,'\0');
+                            std::string arena(len, '\0');
                             std::size_t utf8_length = js_str->WriteUtf8(&arena[0], static_cast<int>(len), nullptr, flags);
                             if (obj->node_size == INCLUDES_ENTRY_COUNT)
                             {
