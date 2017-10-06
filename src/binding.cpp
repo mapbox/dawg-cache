@@ -171,16 +171,13 @@ class JSDawg : public Nan::ObjectWrap
 
 struct dawg_search_result
 {
-    std::string match_string;
-    int node_offset;
-    bool found;
-    bool final;
-    int skipped;
-    int child_count;
+    std::string match_string = "";
+    int node_offset = -1;
+    bool found = false;
+    bool final = false;
+    int skipped = - 1;
+    int child_count = -1;
 };
-
-const struct dawg_search_result DAWG_SEARCH_RESULT_NOTFOUND = {
-    "", -1, false, false, -1, -1};
 
 dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size)
 {
@@ -189,7 +186,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     int node_offset = 0, edge_count = 0, edge_offset = 0, min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
 
-    dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
+    dawg_search_result output;
 
     for (size_t i = 0; i < search_length; i++)
     {
@@ -262,7 +259,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
     bool match = false;
     unsigned char search_letter, letter;
 
-    dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
+    dawg_search_result output;
 
     for (size_t i = 0; i < search_length; i++)
     {
@@ -355,7 +352,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     unsigned char letter;
     std::string match_string;
 
-    dawg_search_result output = DAWG_SEARCH_RESULT_NOTFOUND;
+    dawg_search_result output;
     int remaining = index + 1;
 
     while (true)
@@ -702,7 +699,7 @@ class CompactDawg : public Nan::ObjectWrap
         auto* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
         std::uint32_t return_val = 1;
-        dawg_search_result result = DAWG_SEARCH_RESULT_NOTFOUND;
+        dawg_search_result result;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
         if (!js_val.IsEmpty())
