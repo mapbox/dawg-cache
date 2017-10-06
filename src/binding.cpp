@@ -720,13 +720,17 @@ class CompactDawg : public Nan::ObjectWrap
                     int js_str_len = js_str->Length();
                     if (js_str_len > 0)
                     {
-                        // Also passing v8::String::HINT_MANY_WRITES_EXPECTED flattens string
-                        // but I've not enabled this yet as it does not clearly increase performance
+                        // Overall history on the below code can be found at https://github.com/mapbox/dawg-cache/pull/10#issuecomment-275543942
+                        // Specific notes:
+                        //   - Passing v8::String::HINT_MANY_WRITES_EXPECTED would also flatten the string
+                        //     but I've not enabled this yet as it does not clearly increase performance
+                        //   - Below the 'len' is the max possible size of the decoded utf8 length
+                        //     estimated via the method used in node core: https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
+                        //     This is a much faster than calling `str->Utf8Length();` to get exact length
+                        //   - This approach below is very similar to what Nan::Uf8String does internally, however it is a good bit faster
+                        //     for reasons I've not yet understood
                         const int flags =
                             v8::String::NO_NULL_TERMINATION | v8::String::REPLACE_INVALID_UTF8;
-                        // max possible decoded utf length
-                        // much faster than calling `str->Utf8Length();` to get exact length
-                        // https://github.com/nodejs/node/blob/bfd3c7e626306cc5793618da2b56d37df338eb05/src/string_bytes.cc#L392
                         std::size_t len = (3 * static_cast<std::size_t>(js_str_len)) + 1;
                         if (len > arena_size)
                         {
