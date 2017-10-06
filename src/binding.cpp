@@ -754,7 +754,12 @@ class CompactDawg : public Nan::ObjectWrap
                         {
                             char arena[arena_size];
                             std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), nullptr, flags);
-                            arena[utf8_length] = '\0';
+                            // protect of out of out of bounds access
+                            if (utf8_length > arena_size) {
+                                Nan::ThrowTypeError("Could not decode string");
+                                return;
+                            }
+                            arena[utf8_length] = '\0'; // NOLINT (cppcoreguidelines-pro-bounds-constant-array-index)
                             if (obj->node_size == INCLUDES_ENTRY_COUNT)
                             {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
