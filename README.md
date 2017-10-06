@@ -7,17 +7,17 @@ This is a package that implements two variants of a [directed acyclic word graph
 
 ## Background
 
-[insert visual pipeline]
-
-JSDAWG -->
-
-dawg-cache begins with 2 different implementations of the same conceptual structure. When we create the structure there is a buildtime conversion made of C++ objects.
+Dawg-cache begins with 2 different implementations of the same conceptual structure. When we create the structure there is a buildtime conversion made of C++ objects.
 The compact version is a formulation of the structure that fits in a single contiguous piece of memory. essentially one giant buffer, allowing us to dump the whole thing to disk and read it back to memory that is really slow.
 
 However, this cannot be built right away. In order to write a single node, there is a number to how many edges, and a slot for each edge + an offset in the array for where the next edge, and immediately after that is the start of the next node. So you have to know in advance what the whole structure will look like, knowing how many edges there will be etc.
 
 Thus the more expanded form is a straight port from the python version. [link]() a lot of the search code is only added to the compact version. eg a lot of the traversal stuff is in the compact version specifically in the binding.cpp file.
 
-Some of the search/traversal are on both for testing purposes.
+## Contribution Guidelines
+* all code should be formatted with [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+    * Use [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)
 
-[insert explanation of key functions]
+
+## Build from source
+## Install from binaries

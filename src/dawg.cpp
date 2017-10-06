@@ -6,11 +6,13 @@
 #include <vector>
 #include <memory>
 
-class DawgNode : public Nan::ObjectWrap {
+
+
+class JSDawgNode : public Nan::ObjectWrap {
     public:
         static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
             v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
-            tpl->SetClassName(Nan::New("DawgDawgNode").ToLocalChecked());
+            tpl->SetClassName(Nan::New("Node").ToLocalChecked());
             tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
             SetPrototypeMethod(tpl, "numReachable", numReachable);
@@ -18,10 +20,40 @@ class DawgNode : public Nan::ObjectWrap {
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
             Nan::Set(
                 target,
-                Nan::New("Dawg").ToLocalChecked(),
+                Nan::New("Node").ToLocalChecked(),
                 Nan::GetFunction(tpl).ToLocalChecked()
             );
         }
+    private:
+        explicit JSDawgNode() {}
+        ~JSDawgNode() {}
+        Node node_;
+
+    static NAN_METHOD(New) {
+        if (info.IsConstructCall()) {
+            JSDawgNode *obj = new JSDawgNode();
+            obj->Wrap(info.This());
+            info.GetReturnValue().Set(info.This());
+        } else {
+            v8::Local<v8::Function> cons = Nan::New(constructor());
+            info.GetReturnValue().Set(cons->NewInstance());
+        }
+    }
+
+    static NAN_METHOD(numReachable) {
+        JSDawgNode* obj = Nan::ObjectWrap::Unwrap<JSDawg>(info.This());
+        info.GetReturnValue().Set(obj->node_.num_reachable());
+    }
+
+    static inline Nan::Persistent<v8::Function> & constructor() {
+        static Nan::Persistent<v8::Function> my_constructor;
+        return my_constructor;
+    }
+};
+
+
+class DawgNode {
+    public:
         unsigned int id;
         bool final;
         std::map<unsigned char, std::shared_ptr<DawgNode> > edges;
@@ -49,27 +81,6 @@ class DawgNode : public Nan::ObjectWrap {
         out.pop_back();
         return out;
     }
-
-    private:
-        explicit DawgNode() {}
-        ~DawgNode() {}
-        DawgDawgNode dawgdawgnode_;
-
-        static NAN_METHOD(New) {
-            if (info.IsConstructCall()) {
-                DawgNode *obj = new DawgNode();
-                obj->Wrap(info.This());
-                info.GetReturnValue().Set(info.This());
-            } else {
-                v8::Local<v8::Function> cons = Nan::New(constructor());
-                info.GetReturnValue().Set(cons->NewInstance());
-            }
-        }
-
-        static NAN_METHOD(numReachable) {
-            DawgNode* obj = Nan::ObjectWrap::Unwrap<DawgNode>(info.This());
-            info.GetReturnValue().Set(obj->dawgdawgnode_.num_reachable());
-        }
 };
 
 DawgNode::DawgNode() :
