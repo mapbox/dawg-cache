@@ -171,7 +171,7 @@ class JSDawg : public Nan::ObjectWrap
 
 struct dawg_search_result
 {
-    std::string match_string = "";
+    std::unique_ptr<std::string> match_string = nullptr;
     int node_offset = -1;
     bool found = false;
     bool final = false;
@@ -248,7 +248,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     output.final = (node_final != 0u);
     output.skipped = -1;
     output.child_count = -1;
-    output.match_string.clear();
+    output.match_string = nullptr;
     return output;
 }
 
@@ -340,7 +340,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
     output.final = (node_final != 0u);
     output.child_count = skip_count;
     output.skipped = node_final != 0u ? skipped - 1 : skipped;
-    output.match_string.clear();
+    output.match_string = nullptr;
     return output;
 }
 
@@ -420,7 +420,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     output.final = (node_final != 0u);
     output.child_count = skip_count;
     output.skipped = index;
-    output.match_string = match_string;
+    output.match_string = std::unique_ptr<std::string>{new std::string(match_string)};
     return output;
 }
 
@@ -789,9 +789,9 @@ class CompactDawg : public Nan::ObjectWrap
             out->Set(1, Nan::New(result.skipped));
             out->Set(2, Nan::New(result.child_count));
 
-            if (!result.match_string.empty())
+            if (result.match_string.get() && !result.match_string->empty())
             {
-                out->Set(3, Nan::New(result.match_string).ToLocalChecked());
+                out->Set(3, Nan::New(*(result.match_string)).ToLocalChecked());
             }
             info.GetReturnValue().Set(out);
             return;
