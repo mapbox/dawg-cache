@@ -656,7 +656,7 @@ class CompactDawg : public Nan::ObjectWrap {
             out->Set(1, Nan::New(result.skipped));
             out->Set(2, Nan::New(result.child_count));
 
-            if (result.match_string.get() && !result.match_string->empty()) {
+            if ((result.match_string.get() != nullptr) && !result.match_string->empty()) {
                 out->Set(3, Nan::New(*(result.match_string)).ToLocalChecked());
             }
             info.GetReturnValue().Set(out);
