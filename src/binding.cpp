@@ -175,7 +175,7 @@ struct dawg_search_result
     int node_offset = -1;
     bool found = false;
     bool final = false;
-    int skipped = - 1;
+    int skipped = -1;
     int child_count = -1;
 };
 
@@ -264,7 +264,7 @@ dawg_search_result counted_compact_dawg_search(unsigned char* data, const unsign
     for (size_t i = 0; i < search_length; i++)
     {
         // binary search over the node edges
-        match = false;  // NOLINT (clang tidy thinks it is not used but it is)
+        match = false; // NOLINT (clang tidy thinks it is not used but it is)
         search_letter = search[i];
 
         if (node_offset != -1)
@@ -755,7 +755,8 @@ class CompactDawg : public Nan::ObjectWrap
                             char arena[arena_size];
                             std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), nullptr, flags);
                             // protect of out of out of bounds access
-                            if (utf8_length > arena_size) {
+                            if (utf8_length > arena_size)
+                            {
                                 Nan::ThrowTypeError("Could not decode string");
                                 return;
                             }
