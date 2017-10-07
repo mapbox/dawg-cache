@@ -352,7 +352,7 @@ dawg_search_result inverse_compact_dawg_search(unsigned char* data, int index, u
     output.final = (node_final != 0u);
     output.child_count = skip_count;
     output.skipped = index;
-    output.match_string = std::unique_ptr<std::string>{new std::string(match_string)};
+    output.match_string = std::make_unique<std::string>(match_string);
     return output;
 }
 
@@ -656,7 +656,7 @@ class CompactDawg : public Nan::ObjectWrap {
             out->Set(1, Nan::New(result.skipped));
             out->Set(2, Nan::New(result.child_count));
 
-            if ((result.match_string.get() != nullptr) && !result.match_string->empty()) {
+            if ((result.match_string != nullptr) && !result.match_string->empty()) {
                 out->Set(3, Nan::New(*(result.match_string)).ToLocalChecked());
             }
             info.GetReturnValue().Set(out);
