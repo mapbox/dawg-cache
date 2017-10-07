@@ -1,5 +1,5 @@
 ---
-Checks:          '*'
+Checks:          '*,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '\/src\/'
 AnalyzeTemporaryDtors: false
