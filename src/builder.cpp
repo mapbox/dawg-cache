@@ -1,9 +1,10 @@
-#include <time.h>
-#include <iostream>
-#include <unordered_map>
-#include <memory>
-#include "dawg.cpp"
 #include "crc32c.hpp"
+#include "dawg.cpp"
+#include <cstring>
+#include <ctime>
+#include <iostream>
+#include <memory>
+#include <unordered_map>
 
 using namespace std;
 
@@ -45,7 +46,7 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
         memcpy(&((*output)[cur_size]), &(node->count), sizeof(unsigned int));
     }
 
-    std::vector<std::shared_ptr<DawgNode> > nodes_to_process;
+    std::vector<std::shared_ptr<DawgNode>> nodes_to_process;
     std::shared_ptr<DawgNode> child;
     int i = 0;
     for (auto const& edge : node->edges) {
@@ -127,7 +128,7 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
 
     (*output)[6] = static_cast<unsigned char>(node_size);
 
-    unsigned int data_size = ((unsigned int) output->size()) - DAWG_HEADER_SIZE;
+    unsigned int data_size = ((unsigned int)output->size()) - DAWG_HEADER_SIZE;
     memcpy(&((*output)[8]), &data_size, sizeof(unsigned int));
 
     unsigned int checksum = crc32c(&((*output)[DAWG_HEADER_SIZE]), data_size);
@@ -138,11 +139,11 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
     }
 }
 
-bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_stream, bool verbose, unsigned int node_size) {
+bool build_compact_dawg_full(std::istream* input_stream, std::ostream* output_stream, bool verbose, unsigned int node_size) {
     Dawg dawg;
     std::string word;
     int word_count = 0;
-    time_t start = time(NULL);
+    time_t start = time(nullptr);
 
     while (std::getline(*input_stream, word)) {
         if (word.empty()) {
@@ -150,7 +151,7 @@ bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_st
         }
         word_count += 1;
 
-        if (!dawg.insert(word.data(),word.size())) return false;
+        if (!dawg.insert(word.data(), word.size())) return false;
 
         if (verbose && word_count % 100 == 0) {
             cout << word_count << "\r";
@@ -164,7 +165,7 @@ bool build_compact_dawg_full(std::istream *input_stream, std::ostream *output_st
     dawg.finish();
 
     if (verbose) {
-        cout << "Dawg creation took " << (time(NULL) - start) << " s\n";
+        cout << "Dawg creation took " << (time(nullptr) - start) << " s\n";
         cout << "Read " << word_count << " words into " << dawg.node_count() << " nodes and " << dawg.edge_count() << " edges\n";
     }
 
