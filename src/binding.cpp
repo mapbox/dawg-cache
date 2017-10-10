@@ -154,11 +154,14 @@ struct dawg_search_result {
     int child_count = -1;
 };
 
+//parameters - character array of our data, character array of the strong to search, length of the query string, size of the node
+//since the counted_dawg_cache also stores the count, the value of node_size = 1 || 5 for compact_dawg_cache || counted_compact_dawg_cache
 dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size) {
     unsigned int flagged_offset, node_final = 0;
     bool match = false;
     int node_offset = 0, edge_count = 0, edge_offset = 0, min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
+    std::string match_string;
 
     dawg_search_result output;
 
@@ -175,7 +178,9 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                 max = edge_count - 1;
 
                 while (min <= max) {
+                    //similar to (min + max)/2 for more context -- http://www.geeksforgeeks.org/binary-search/
                     guess = (min + max) >> 1;
+                    //root node position (starts with 0) +  node_size to get to the position after the node_offset (1 for compact_dawg_cache) + ((4 + 1) * guess)
                     edge_offset = node_offset + node_size + (5 * guess);
                     letter = data[edge_offset];
                     if (letter == search_letter) {
@@ -192,10 +197,13 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
             }
         }
         if (match) {
+            //https://www.tutorialspoint.com/c_standard_library/c_function_memcpy.htm
+            //copies n characters from memory area str2 to memory area str1
             memcpy(&flagged_offset, &(data[edge_offset + 1]), sizeof(unsigned int));
 
             node_offset = static_cast<int>(flagged_offset & FINAL_MASK);
             node_final = flagged_offset & IS_FINAL_FLAG;
+            match_string += letter;
 
             if (node_offset == 0) {
                 node_offset = -1;
@@ -210,7 +218,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     output.final = (node_final != 0u);
     output.skipped = -1;
     output.child_count = -1;
-    output.match_string = nullptr;
+    output.match_string = std::make_unique<std::string>(match_string);;
+
     return output;
 }
 
