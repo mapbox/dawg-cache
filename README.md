@@ -15,9 +15,9 @@ However, this cannot be built right away. In order to write a single node, there
 Thus the more expanded form is a straight port from the python version. [link]() a lot of the search code is only added to the compact version. eg a lot of the traversal stuff is in the compact version specifically in the binding.cpp file.
 
 ## Contribution Guidelines
-* all code should be formatted with [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+* All code should be formatted with [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
     * Use [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)
 
-
+## Setup
 ## Build from source
 ## Install from binaries
