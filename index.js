@@ -1,4 +1,4 @@
-var binding = require("./lib/jsdawg.node");
+var binding = require("./lib/binding/jsdawg.node");
 var assert = require("assert");
 var Symbol = require("es6-symbol");
 

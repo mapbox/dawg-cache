@@ -4,7 +4,6 @@ var queue = require('queue-async');
 var zlib = require('zlib');
 var forOf = require('es6-iterator/for-of');
 require('collections/collections.js');
-var binding = require("../lib/jsdawg.node");
 
 var jsdawg = require("../index");
 

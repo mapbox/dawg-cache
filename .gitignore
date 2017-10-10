@@ -4,4 +4,8 @@
 build
 node_modules
 npm-debug.log
-lib/*
+lib/binding
+.toolchain
+.mason
+mason_packages
+local.env

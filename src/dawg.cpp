@@ -2,9 +2,10 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 
 
@@ -53,14 +54,14 @@ class JSDawgNode : public Nan::ObjectWrap {
 
 
 class DawgNode {
-    public:
-        unsigned int id;
-        bool final;
-        std::map<unsigned char, std::shared_ptr<DawgNode> > edges;
-        // Number of end nodes reachable from this one.
-        unsigned int count;
-        DawgNode();
-        uint num_reachable();
+  public:
+    unsigned int id;
+    bool final;
+    std::map<unsigned char, std::shared_ptr<DawgNode>> edges;
+    // Number of end nodes reachable from this one.
+    unsigned int count;
+    DawgNode();
+    unsigned int num_reachable();
 
     std::string to_string() {
         std::string out = "";
@@ -83,12 +84,11 @@ class DawgNode {
     }
 };
 
-DawgNode::DawgNode() :
-  id(0),
-  final(false),
-  count(0) { }
+DawgNode::DawgNode() : id(0),
+                       final(false),
+                       count(0) {}
 
-uint DawgNode::num_reachable() {
+unsigned int DawgNode::num_reachable() {
     // if a count is already assigned, return it
     if (count) return count;
 
@@ -108,13 +108,13 @@ class DawgNodeCheckEntry {
   public:
     DawgNodeCheckEntry(char let,
                        std::shared_ptr<DawgNode> const& par)
-      : parent(par),
-        child(std::make_shared<DawgNode>()),
-        letter(let) {}
+        : parent(par),
+          child(std::make_shared<DawgNode>()),
+          letter(let) {}
     // make this class noncopyable, only movable
-    DawgNodeCheckEntry(DawgNodeCheckEntry && ) = default;
-    DawgNodeCheckEntry( DawgNodeCheckEntry const& ) = delete;
-    DawgNodeCheckEntry& operator=(DawgNodeCheckEntry const& ) = delete;
+    DawgNodeCheckEntry(DawgNodeCheckEntry&&) = default;
+    DawgNodeCheckEntry(DawgNodeCheckEntry const&) = delete;
+    DawgNodeCheckEntry& operator=(DawgNodeCheckEntry const&) = delete;
 
     std::shared_ptr<DawgNode> parent;
     std::shared_ptr<DawgNode> child;
@@ -122,30 +122,30 @@ class DawgNodeCheckEntry {
 };
 
 class Dawg {
-    public:
-        std::string previous_word;
-        std::shared_ptr<DawgNode> root;
-        std::vector<DawgNodeCheckEntry> unchecked_nodes;
-        std::unordered_map<std::string, std::shared_ptr<DawgNode> > minimized_nodes;
-        int node_counter;
-        Dawg();
-        bool insert(const char * data, std::size_t len);
-        void finish();
-        bool lookup(const char * data, std::size_t len);
-        bool lookup_prefix(const char * data, std::size_t len);
-        uint edge_count();
-        uint node_count();
-    private:
-        void _minimize(int down_to);
+  public:
+    std::string previous_word;
+    std::shared_ptr<DawgNode> root;
+    std::vector<DawgNodeCheckEntry> unchecked_nodes;
+    std::unordered_map<std::string, std::shared_ptr<DawgNode>> minimized_nodes;
+    int node_counter;
+    Dawg();
+    bool insert(const char* data, std::size_t len);
+    void finish();
+    bool lookup(const char* data, std::size_t len);
+    bool lookup_prefix(const char* data, std::size_t len);
+    unsigned int edge_count();
+    unsigned int node_count();
+
+  private:
+    void _minimize(int down_to);
 };
 
-Dawg::Dawg() :
-  previous_word(),
-  root(std::make_shared<DawgNode>()),
-  node_counter(1) { }
+Dawg::Dawg() : previous_word(),
+               root(std::make_shared<DawgNode>()),
+               node_counter(1) {}
 
 bool Dawg::insert(const char* data, std::size_t len) {
-    std::string word(data,len);
+    std::string word(data, len);
     // This does lexigraphical compare
     // http://en.cppreference.com/w/cpp/algorithm/lexicographical_compare
     if (word <= previous_word) {
@@ -155,7 +155,7 @@ bool Dawg::insert(const char* data, std::size_t len) {
     // find common prefix between word and previous word
     unsigned int common_prefix = 0;
     unsigned int range = std::min(len, previous_word.length());
-    for (uint i = 0; i < range; i++) {
+    for (unsigned int i = 0; i < range; i++) {
         if (word[i] != previous_word[i]) {
             break;
         }
@@ -178,8 +178,8 @@ bool Dawg::insert(const char* data, std::size_t len) {
 
     for (size_t i = common_prefix; i < len; i++) {
         char letter = word[i];
-        unchecked_nodes.emplace_back(letter,node);
-        DawgNodeCheckEntry & check_entry = unchecked_nodes.back();
+        unchecked_nodes.emplace_back(letter, node);
+        DawgNodeCheckEntry& check_entry = unchecked_nodes.back();
         check_entry.child->id = node_counter++;
         node->edges[letter] = check_entry.child;
         node = check_entry.child;
@@ -204,7 +204,7 @@ void Dawg::_minimize(int down_to) {
 
     int num_unchecked = static_cast<int>(unchecked_nodes.size());
     for (int i = num_unchecked - 1; i >= down_to; i--) {
-        DawgNodeCheckEntry & to_check = unchecked_nodes[i];
+        DawgNodeCheckEntry& to_check = unchecked_nodes[i];
         std::string child_string = to_check.child->to_string();
         if (minimized_nodes.count(child_string) > 0) {
             // replace the child with the previously encountered one
@@ -217,10 +217,10 @@ void Dawg::_minimize(int down_to) {
     }
 }
 
-bool Dawg::lookup(const char * data, std::size_t len) {
+bool Dawg::lookup(const char* data, std::size_t len) {
     std::shared_ptr<DawgNode> node = root;
 
-    for (uint i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         char letter = data[i];
         if (node->edges.count(letter) == 0) {
             return false;
@@ -235,10 +235,10 @@ bool Dawg::lookup(const char * data, std::size_t len) {
     return false;
 }
 
-bool Dawg::lookup_prefix(const char * data, std::size_t len) {
+bool Dawg::lookup_prefix(const char* data, std::size_t len) {
     std::shared_ptr<DawgNode> node = root;
 
-    for (uint i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         char letter = data[i];
         if (node->edges.count(letter) == 0) {
             return false;
@@ -250,12 +250,12 @@ bool Dawg::lookup_prefix(const char * data, std::size_t len) {
     return true;
 }
 
-uint Dawg::node_count() {
+unsigned int Dawg::node_count() {
     return minimized_nodes.size();
 }
 
-uint Dawg::edge_count() {
-    uint count = 0;
+unsigned int Dawg::edge_count() {
+    unsigned int count = 0;
     for (auto const& min_node : minimized_nodes) {
         count += min_node.second->edges.size();
     }
