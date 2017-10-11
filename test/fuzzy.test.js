@@ -59,6 +59,19 @@ test('Read-write DAWG test', function(t) {
     }
     t.pass("dawg created");
 
+    test('Compact DAWG test', function(t) {
+        dawg.finish();
+
+        var compactDawg = dawg.toCompactDawg(false);
+        t.pass("compact dawg created")
+
+        var exactLookup = true;
+        for (var i = 0; i < words.length; i++) {
+            exactLookup = exactLookup && compactDawg.lookup(words[i]);
+        }
+        t.assert(exactLookup, "compact dawg contains all words");
+
+
 // Test that dawg contains all words
     var exactLookup = true;
     for (var i = 0; i < words.length; i++) {
