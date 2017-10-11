@@ -30,29 +30,6 @@ test('DAWG test invalid usage', function (t) {
 var resp, dawg, wordSet;
 var words = [];
 
-// test('Prepare for DAWG test', function (t) {
-//     var q = queue();
-//     var words = fs.readFileSync(__dirname + '/fixtures/words.txt').toString().split('\n');
-//     words.sort();
-//     ['words.txt'].forEach(function(file) {
-//         q.defer(function(callback) {
-//             request.get({url: "http://mapbox.s3.amazonaws.com/apendleton/" + file, encoding: null}, function(err, response, body) {
-//                 if (err) throw new Error ("S3 fetch failed");
-//                 zlib.gunzip(body, function(err, data) {
-//                     if (err) throw new Error("Zlib decompression failed: " + err);
-//                     resp = data.toString();
-//                     words = words.concat(resp.trim().split("\n"));
-//                     callback();
-//                 })
-//             })
-//         });
-//     });
-//     q.awaitAll(function() {
-//         words.sort();
-//         t.end();
-//     });
-// });
-
 test('Construct Fuzzy Dawg', function(t) {
     var words = fs.readFileSync(__dirname + '/fixture/words.txt').toString().split('\n');
     words.sort();
@@ -110,7 +87,7 @@ test('Fuzzy Compact DAWG test', function(t) {
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("yenisteian");
     t.assert(exactLookup, "Search 'yenisteian' returns 'yeniseian");
-    // end
+    // end 
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("yeniseiant");
     t.assert(exactLookup, "Search 'yeniseiant' returns 'yeniseian");
@@ -126,6 +103,16 @@ test('Fuzzy Compact DAWG test', function(t) {
     exactLookup = exactLookup && dawg.lookup("cat");
     t.assert(exactLookup, "Search 'cat' returns 'cart' instead of 'cast'");
 
+//more than one occurence of a character should return null, which is falsey
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("wrongheeeeadedness");
+    t.assert(!exactLookup, "Search 'wrongheeeeadedness' returns null");
+
+//deletion of a correct character should retrurn null, which is falsey
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("wrog");
+    t.assert(!exactLookup, "Search 'wrogheadness' returns null");
 
     t.end();
 });
+
