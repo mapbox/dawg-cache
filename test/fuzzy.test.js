@@ -58,6 +58,7 @@ test('Read-write DAWG test', function(t) {
         dawg.insert(words[i]);
     }
     t.pass("dawg created");
+    t.end();
 });
 
 test('Compact DAWG test', function(t) {
@@ -88,7 +89,7 @@ test('Compact DAWG test', function(t) {
 //Search for a word, not in the structure, but contains an extra letter
     var lookupActual = true;
     for (var i = 0; i < words.length; i++) {
-        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log('words[i]',words[i]);
+        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log('$words[i]',words[i]);
         lookupActual = lookupActual && (!dawg.lookup(words[i] + "abc"));
         lookupActual = lookupActual && (!dawg.lookupPrefix(words[i] + "abc"));
     }
@@ -98,7 +99,7 @@ test('Compact DAWG test', function(t) {
 // In this instance we need to decide which should return.
     var lookupActual = true;
     for (var i = 0; i < words.length; i++) {
-        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log('words[i]',words[i]);
+        if (dawg.lookup(words[i] + "abc") || dawg.lookupPrefix(words[i] + "abc")) console.log(`${i}`,words[i]);
         lookupActual = lookupActual && (!dawg.lookup(words[i] + "abc"));
         lookupActual = lookupActual && (!dawg.lookupPrefix(words[i] + "abc"));
     }
