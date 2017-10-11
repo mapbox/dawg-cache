@@ -6,26 +6,7 @@ var forOf = require('es6-iterator/for-of');
 require('collections/collections.js');
 var binding = require("../lib/jsdawg.node");
 var fs = require("fs");
-
 var jsdawg = require("../index");
-
-test('DAWG test invalid usage', function (t) {
-    var dawg = new jsdawg.Dawg();
-    t.throws(function() { dawg.insert(null) }, /first argument must be a String/, "validates inserted null value");
-    t.throws(function() { dawg.insert({}) }, /first argument must be a String/, "validates inserted {} value");
-    t.throws(function() { dawg.insert(1.0) }, /first argument must be a String/, "validates inserted 1.0 value");
-    t.throws(function() { dawg.insert(function(){}) }, /first argument must be a String/, "validates inserted function value");
-    t.throws(function() { dawg.lookup(null) }, /first argument must be a String/, "validates null lookup value");
-    t.throws(function() { dawg.lookupPrefix(null) }, /first argument must be a String/, "validates null lookupPrefix value");
-    t.throws(function() { dawg.insert('') }, /empty string passed to insert/, "validates inserted empty string value");
-    dawg.finish();
-    var compactDawg = dawg.toCompactDawg();
-    t.assert(compactDawg.lookup() == '', 'lookup empty string');
-    t.assert(compactDawg.lookupPrefix() == '', 'lookup empty string prfix');
-    t.assert(compactDawg.lookup({}) == '', 'lookup object');
-    t.assert(compactDawg.lookupPrefix({}) == '', 'lookup object prefix');
-    t.end();
-});
 
 var resp, dawg, wordSet;
 var words = [];
