@@ -90,7 +90,7 @@ test('Fuzzy Compact DAWG test', function(t) {
 
 //deletion of a correct character should retrurn null, which is falsey
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("wrog");
+    exactLookup = exactLookup && dawg.lookup("wrogheadness");
     t.assert(!exactLookup, "Search 'wrogheadness' returns null");
 
     t.end();
