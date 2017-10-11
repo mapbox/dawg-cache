@@ -161,6 +161,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     bool match = false;
     int node_offset = 0, edge_count = 0, edge_offset = 0, min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
+    bool exact_match = true;
+    bool fuzzy_flag = false;
     std::string match_string;
 
     dawg_search_result output;
@@ -185,6 +187,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                     letter = data[edge_offset];
                     if (letter == search_letter) {
                         match = true;
+                        fuzzy_flag = true;
                         break;
                     }
 
@@ -209,6 +212,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                 node_offset = -1;
             }
         } else {
+            exact_match = false;
+            fuzzy_flag = false;
             return output;
         }
     }
@@ -219,6 +224,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     output.skipped = -1;
     output.child_count = -1;
     output.match_string = std::make_unique<std::string>(match_string);;
+    output.fuzzy_flag = fuzzy_flag;
+    output.exact_match = exact_match;
 
     return output;
 }
