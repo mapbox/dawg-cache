@@ -60,6 +60,7 @@ test('Construct Fuzzy Dawg', function(t) {
 
     dawg = new jsdawg.Dawg();
     for (var i = 0; i < words.length; i++) {
+        console.log(i);
         dawg.insert(words[i]);
     }
     t.pass("dawg created");
