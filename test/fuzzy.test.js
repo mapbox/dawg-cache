@@ -86,31 +86,38 @@ test('Fuzzy Compact DAWG test', function(t) {
     }
     t.assert(exactLookup, "dawg contains all words");
 
-// Search for a word, not in the structure, but the structure
-// contains a matching word missing a letter
-// at the beginning/middle/end of the word
+// Search for a word, not in the structure, but the structure contains a matching word missing a letter at the beginning/middle/end of the word
     // beginning
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("tyeomaness");
-    t.assert(exactLookup, "Search for a 'tyeomaness', not in the structure, but the structure contains, 'yeomaness,' a matching word missing a letter at the start of the word");
+    t.assert(exactLookup, "Search 'tyeomaness' returns 'yeomaness'");
     // middle
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("yeomtaness");
-    t.assert(exactLookup, "Search for a 'yeomtaness', not in the structure, but the structure contains, 'yeomaness,' a matching word missing a letter in the middle of the word");
+    t.assert(exactLookup, "Search 'yeomtaness' returns 'yeomaness'");
     // end
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("yeomanesst");
-    t.assert(exactLookup, "Search for a 'yeomanesst', not in the structure, but the structure contains, 'yeomaness,' a matching word missing a letter at the start of the word");
+    t.assert(exactLookup, "Search 'yeomanesst' returns 'yeomaness'");
 
 //Search for a word, not in the structure, but contains an extra letter at the beginning/middle/end of the word
+    // beginning
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("abq");
-    t.assert(exactLookup, "Search for a word, not in the structure, but contains an extra letter");
+    exactLookup = exactLookup && dawg.lookup("tyeniseian");
+    t.assert(exactLookup, "Search 'tyeniseian' returns 'yeniseian'");
+    // middle
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("yenisteian");
+    t.assert(exactLookup, "Search 'yenisteian' returns 'yeniseian");
+    // end
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("yeniseiant");
+    t.assert(exactLookup, "Search 'yeniseiant' returns 'yeniseian");
 
 //Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2) a word missing a letter at the beginning/middle/end of the word
 // In this instance we need to decide which should return.
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("abq");
+    exactLookup = exactLookup && dawg.lookup("yeniseian");
     t.assert(exactLookup, "dawg contains 'abq'");
 
     t.end();
