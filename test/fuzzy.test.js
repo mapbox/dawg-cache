@@ -81,17 +81,17 @@ test('Compact DAWG test', function(t) {
     }
     t.assert(exactLookup, "dawg contains all words");
 
-// Search for a word, not in the structure, but the structure contains a matching word missing a letter
+// Search for a word, not in the structure, but the structure contains a matching word missing a letter at the beginning/middle/end of the word
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("abramxis");
+    t.assert(exactLookup, "Search for a 'abramxis', not in the structure, but the structure contains, 'abramis,' a matching word missing a letter");
+
+//Search for a word, not in the structure, but contains an extra letter at the beginning/middle/end of the word
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("abq");
-    t.assert(exactLookup, "dawg contains 'abq'");
+    t.assert(exactLookup, "Search for a word, not in the structure, but contains an extra letter");
 
-//Search for a word, not in the structure, but contains an extra letter
-    exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("abq");
-    t.assert(exactLookup, "dawg contains 'abq'");
-
-//Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2_ a word missing a letter
+//Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2) a word missing a letter at the beginning/middle/end of the word
 // In this instance we need to decide which should return.
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("abq");
