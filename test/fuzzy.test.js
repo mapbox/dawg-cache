@@ -86,10 +86,21 @@ test('Fuzzy Compact DAWG test', function(t) {
     }
     t.assert(exactLookup, "dawg contains all words");
 
-// Search for a word, not in the structure, but the structure contains a matching word missing a letter at the beginning/middle/end of the word
+// Search for a word, not in the structure, but the structure
+// contains a matching word missing a letter
+// at the beginning/middle/end of the word
+    // beginning
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("abramxis");
-    t.assert(exactLookup, "Search for a 'abramxis', not in the structure, but the structure contains, 'abramis,' a matching word missing a letter");
+    exactLookup = exactLookup && dawg.lookup("tyeomaness");
+    t.assert(exactLookup, "Search for a 'tyeomaness', not in the structure, but the structure contains, 'yeomaness,' a matching word missing a letter at the start of the word");
+    // middle
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("yeomtaness");
+    t.assert(exactLookup, "Search for a 'yeomtaness', not in the structure, but the structure contains, 'yeomaness,' a matching word missing a letter in the middle of the word");
+    // end
+    exactLookup = true;
+    exactLookup = exactLookup && dawg.lookup("yeomanesst");
+    t.assert(exactLookup, "Search for a 'yeomanesst', not in the structure, but the structure contains, 'yeomaness,' a matching word missing a letter at the start of the word");
 
 //Search for a word, not in the structure, but contains an extra letter at the beginning/middle/end of the word
     exactLookup = true;
