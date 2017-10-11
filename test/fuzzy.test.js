@@ -117,12 +117,13 @@ test('Fuzzy Compact DAWG test', function(t) {
 //Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2) a word missing a letter at the beginning/middle/end of the word
 // In this instance we need to decide which should return.
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("wrongtheaded");
-    t.assert(exactLookup, "Search 'wrongtheaded' returns 'wrongheaded' instead of 'wrongheadedly'");
+    exactLookup = exactLookup && dawg.lookup("dogtg");
+    t.assert(exactLookup, "Search 'dogtg' returns 'dog' instead of 'dogg'");
 
+// Search for a word, not in the structure, but the structure contains multiple options
     exactLookup = true;
     exactLookup = exactLookup && dawg.lookup("cat");
-    t.assert(exactLookup, "Search 'cat' returns 'cast' instead of 'cart'");
+    t.assert(exactLookup, "Search 'cat' returns 'cart' instead of 'cast'");
 
 
     t.end();
