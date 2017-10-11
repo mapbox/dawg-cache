@@ -588,14 +588,12 @@ class CompactDawg : public Nan::ObjectWrap {
     static NAN_METHOD(Lookup) {
         auto* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
-        std::uint32_t return_val = 1;
         dawg_search_result result;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
         if (!js_val.IsEmpty()) {
             if (js_val->IsNumber()) {
                 result = inverse_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), js_val->IntegerValue(), obj->node_size);
-                return_val = 2;
             } else {
                 v8::Local<v8::String> js_str = js_val->ToString();
                 if (!js_str.IsEmpty()) {
@@ -621,11 +619,6 @@ class CompactDawg : public Nan::ObjectWrap {
                             } else {
                                 result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
                             }
-                            if (result.found) {
-                                return_val = result.final ? 2 : 1;
-                            } else {
-                                return_val = 0;
-                            }
                         } else {
                             char arena[arena_size];
                             std::size_t utf8_length = js_str->WriteUtf8(arena, static_cast<int>(len), nullptr, flags);
@@ -640,30 +633,44 @@ class CompactDawg : public Nan::ObjectWrap {
                             } else {
                                 result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
                             }
-                            if (result.found) {
-                                return_val = result.final ? 2 : 1;
-                            } else {
-                                return_val = 0;
-                            }
+                        }
+                    } else {
+                        // this is a special case: searching for an empty string always returns true as a
+                        // prefix and false as a final string, and for counted structures, we return
+                        // the total number of records in the index as the suffix count
+                        result.found = true;
+                        result.final = false;
+                        result.match_string = std::make_unique<std::string>();
+
+                        if (obj->node_size == INCLUDES_ENTRY_COUNT) {
+                            result.skipped = 0;
+                            memcpy(&(result.child_count), &(obj->data[1]), sizeof(int32_t));
                         }
                     }
                 }
             }
         }
-        if (return_val != 0 && result.skipped != -1) {
-            v8::Local<v8::Array> out = Nan::New<v8::Array>();
-            out->Set(0, Nan::New(return_val));
-            out->Set(1, Nan::New(result.skipped));
-            out->Set(2, Nan::New(result.child_count));
+
+        if (result.found) {
+            v8::Local<v8::Object> out = Nan::New<v8::Object>();
+            out->Set(Nan::New("final").ToLocalChecked(), Nan::New(result.final));
+
+            if (result.skipped != -1) {
+                out->Set(Nan::New("index").ToLocalChecked(), Nan::New(result.skipped));
+                out->Set(Nan::New("suffixCount").ToLocalChecked(), Nan::New(result.child_count));
+            }
 
             if ((result.match_string != nullptr) && !result.match_string->empty()) {
-                out->Set(3, Nan::New(*(result.match_string)).ToLocalChecked());
+                out->Set(Nan::New("text").ToLocalChecked(), Nan::New(*(result.match_string)).ToLocalChecked());
+            } else {
+                out->Set(Nan::New("text").ToLocalChecked(), js_val);
             }
             info.GetReturnValue().Set(out);
-            return;
+        } else {
+            info.GetReturnValue().Set(Nan::Null());
         }
 
-        info.GetReturnValue().Set(return_val);
+        return;
     }
 
     static NAN_METHOD(Iterator) {
