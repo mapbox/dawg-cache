@@ -1,5 +1,7 @@
 cast
 cart
+dog
+dogg
 yeniseian
 yenite
 yentnite
