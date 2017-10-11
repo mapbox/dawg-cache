@@ -5,6 +5,7 @@ var zlib = require('zlib');
 var forOf = require('es6-iterator/for-of');
 require('collections/collections.js');
 var binding = require("../lib/jsdawg.node");
+var fs = require("fs");
 
 var jsdawg = require("../index");
 
@@ -29,28 +30,32 @@ test('DAWG test invalid usage', function (t) {
 var resp, dawg, wordSet;
 var words = [];
 
-test('Prepare for DAWG test', function (t) {
-    var q = queue();
-    ['test_words.txt.gz', 'nonlatin_words.txt.gz'].forEach(function(file) {
-        q.defer(function(callback) {
-            request.get({url: "http://mapbox.s3.amazonaws.com/apendleton/" + file, encoding: null}, function(err, response, body) {
-                if (err) throw new Error ("S3 fetch failed");
-                zlib.gunzip(body, function(err, data) {
-                    if (err) throw new Error("Zlib decompression failed: " + err);
-                    resp = data.toString();
-                    words = words.concat(resp.trim().split("\n"));
-                    callback();
-                })
-            })
-        });
-    });
-    q.awaitAll(function() {
-        words.sort();
-        t.end();
-    });
-});
+// test('Prepare for DAWG test', function (t) {
+//     var q = queue();
+//     var words = fs.readFileSync(__dirname + '/fixtures/words.txt').toString().split('\n');
+//     words.sort();
+//     ['words.txt'].forEach(function(file) {
+//         q.defer(function(callback) {
+//             request.get({url: "http://mapbox.s3.amazonaws.com/apendleton/" + file, encoding: null}, function(err, response, body) {
+//                 if (err) throw new Error ("S3 fetch failed");
+//                 zlib.gunzip(body, function(err, data) {
+//                     if (err) throw new Error("Zlib decompression failed: " + err);
+//                     resp = data.toString();
+//                     words = words.concat(resp.trim().split("\n"));
+//                     callback();
+//                 })
+//             })
+//         });
+//     });
+//     q.awaitAll(function() {
+//         words.sort();
+//         t.end();
+//     });
+// });
 
-test('Read-write DAWG test', function(t) {
+test('Construct Fuzzy Dawg', function(t) {
+    var words = fs.readFileSync(__dirname + '/fixture/words.txt').toString().split('\n');
+    words.sort();
     wordSet = FastSet(words);
 
     dawg = new jsdawg.Dawg();
@@ -61,7 +66,7 @@ test('Read-write DAWG test', function(t) {
     t.end();
 });
 
-test('Compact DAWG test', function(t) {
+test('Fuzzy Compact DAWG test', function(t) {
     dawg.finish();
 
     var compactDawg = dawg.toCompactDawg(false);

@@ -20,6 +20,7 @@
   },
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
+    "pretest": "tape ./test/duplicate_module.test.js && node -e \"var fs = require('fs'); fs.writeFileSync(__dirname + '/build_time', (new Date().toUTCString()));\"",
     "test": "tape test/*.test.js"
   },
   "bundledDependencies": [
