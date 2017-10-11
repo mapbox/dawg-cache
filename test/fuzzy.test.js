@@ -30,29 +30,6 @@ test('DAWG test invalid usage', function (t) {
 var resp, dawg, wordSet;
 var words = [];
 
-// test('Prepare for DAWG test', function (t) {
-//     var q = queue();
-//     var words = fs.readFileSync(__dirname + '/fixtures/words.txt').toString().split('\n');
-//     words.sort();
-//     ['words.txt'].forEach(function(file) {
-//         q.defer(function(callback) {
-//             request.get({url: "http://mapbox.s3.amazonaws.com/apendleton/" + file, encoding: null}, function(err, response, body) {
-//                 if (err) throw new Error ("S3 fetch failed");
-//                 zlib.gunzip(body, function(err, data) {
-//                     if (err) throw new Error("Zlib decompression failed: " + err);
-//                     resp = data.toString();
-//                     words = words.concat(resp.trim().split("\n"));
-//                     callback();
-//                 })
-//             })
-//         });
-//     });
-//     q.awaitAll(function() {
-//         words.sort();
-//         t.end();
-//     });
-// });
-
 test('Construct Fuzzy Dawg', function(t) {
     var words = fs.readFileSync(__dirname + '/fixture/words.txt').toString().split('\n');
     words.sort();
@@ -60,7 +37,6 @@ test('Construct Fuzzy Dawg', function(t) {
 
     dawg = new jsdawg.Dawg();
     for (var i = 0; i < words.length; i++) {
-        console.log(i);
         dawg.insert(words[i]);
     }
     t.pass("dawg created");
