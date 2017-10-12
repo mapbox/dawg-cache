@@ -606,6 +606,10 @@ class CompactDawg : public Nan::ObjectWrap {
     static NAN_METHOD(Lookup) {
         auto* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
+        bool fuzzy_flag = false;
+        if (info.Length() > 1) {
+            fuzzy_flag = info[1]->IsBoolean() && info[1]->BooleanValue();
+        }
         dawg_search_result result;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
         // https://github.com/nodejs/node/pull/1042
@@ -635,7 +639,7 @@ class CompactDawg : public Nan::ObjectWrap {
                             if (obj->node_size == INCLUDES_ENTRY_COUNT) {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
                             } else {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size, true);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size, fuzzy_flag);
                             }
                         } else {
                             char arena[arena_size];
@@ -649,7 +653,7 @@ class CompactDawg : public Nan::ObjectWrap {
                             if (obj->node_size == INCLUDES_ENTRY_COUNT) {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
                             } else {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size, true);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size, fuzzy_flag);
                             }
                         }
                     } else {
@@ -672,6 +676,7 @@ class CompactDawg : public Nan::ObjectWrap {
         if (result.found) {
             v8::Local<v8::Object> out = Nan::New<v8::Object>();
             out->Set(Nan::New("final").ToLocalChecked(), Nan::New(result.final));
+            out->Set(Nan::New("exact_match").ToLocalChecked(), Nan::New(result.exact_match));
 
             if (result.skipped != -1) {
                 out->Set(Nan::New("index").ToLocalChecked(), Nan::New(result.skipped));
