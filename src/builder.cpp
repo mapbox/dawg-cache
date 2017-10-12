@@ -81,7 +81,7 @@ void write_node(shared_ptr<DawgNode> node, std::vector<unsigned char>* output, s
     }
 }
 
-void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool verbose, unsigned int node_size) {
+void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, unsigned int node_size) {
     // write the header
     output->resize(output->size() + DAWG_HEADER_SIZE);
     memcpy(&((*output)[0]), DAWG_DEFAULT_HEADER, DAWG_HEADER_SIZE);
@@ -91,15 +91,7 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
     // this maps from a dawgdic node index to an offset in the compressed DAWG
     std::unordered_map<unsigned int, unsigned int> node_locs;
 
-    if (verbose) {
-        cout << "Starting serialization...\n";
-    }
-
     write_node(dawg->root, output, &edge_locs, &node_locs, node_size);
-
-    if (verbose) {
-        cout << "Rewriting offsets...\n";
-    }
 
     size_t num_edges = edge_locs.size();
     for (size_t i = 0; i < num_edges; i++) {
@@ -122,10 +114,6 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
         memcpy(&((*output)[edge_offset + 1]), &flagged_offset, sizeof(unsigned int));
     }
 
-    if (verbose) {
-        cout << "Rewriting metadata\n";
-    }
-
     (*output)[6] = static_cast<unsigned char>(node_size);
 
     unsigned int data_size = ((unsigned int)output->size()) - DAWG_HEADER_SIZE;
@@ -133,47 +121,4 @@ void build_compact_dawg(Dawg* dawg, std::vector<unsigned char>* output, bool ver
 
     unsigned int checksum = crc32c(&((*output)[DAWG_HEADER_SIZE]), data_size);
     memcpy(&((*output)[12]), &checksum, sizeof(unsigned int));
-
-    if (verbose) {
-        cout << "Done; generated " << output->size() << " bytes of output\n";
-    }
-}
-
-bool build_compact_dawg_full(std::istream* input_stream, std::ostream* output_stream, bool verbose, unsigned int node_size) {
-    Dawg dawg;
-    std::string word;
-    int word_count = 0;
-    time_t start = time(nullptr);
-
-    while (std::getline(*input_stream, word)) {
-        if (word.empty()) {
-            continue;
-        }
-        word_count += 1;
-
-        if (!dawg.insert(word.data(), word.size())) return false;
-
-        if (verbose && word_count % 100 == 0) {
-            cout << word_count << "\r";
-        }
-    }
-
-    if (verbose) {
-        cout << "Finalizing structures...\n";
-    }
-
-    dawg.finish();
-
-    if (verbose) {
-        cout << "Dawg creation took " << (time(nullptr) - start) << " s\n";
-        cout << "Read " << word_count << " words into " << dawg.node_count() << " nodes and " << dawg.edge_count() << " edges\n";
-    }
-
-    std::vector<unsigned char> output;
-
-    build_compact_dawg(&dawg, &output, verbose, node_size);
-
-    output_stream->write((const char*)&output[0], output.size());
-
-    return true;
 }

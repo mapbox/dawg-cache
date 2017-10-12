@@ -129,7 +129,7 @@ class JSDawg : public Nan::ObjectWrap {
         }
 
         auto* output = new std::vector<unsigned char>();
-        build_compact_dawg(&(obj->dawg_), output, false, preserveCounts ? INCLUDES_ENTRY_COUNT : EDGE_COUNT_ONLY);
+        build_compact_dawg(&(obj->dawg_), output, preserveCounts ? INCLUDES_ENTRY_COUNT : EDGE_COUNT_ONLY);
 
         Nan::MaybeLocal<v8::Object> out = Nan::NewBuffer(
             reinterpret_cast<char*>(&((*output)[0])),
