@@ -152,6 +152,7 @@ struct dawg_search_result {
     bool final = false;
     int skipped = -1;
     int child_count = -1;
+    bool exact_match = true;
 };
 
 //parameters - character array of our data, character array of the strong to search, length of the query string, size of the node
@@ -212,9 +213,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
             }
         } else {
             exact_match = false;
-            fuzzy_flag = true;
             if (fuzzed == false && fuzzy_flag == true) {
-                // fuzz the search
                 fuzzed = true;
             } else {
                 return output;
@@ -449,7 +448,7 @@ class CompactIterator : public Nan::ObjectWrap {
                 auto* search = reinterpret_cast<unsigned char*>(*utf8_value);
                 size_t search_length = utf8_value.length();
 
-                dawg_search_result result = compact_dawg_search(obj->data, search, search_length, obj->node_size);
+                dawg_search_result result = compact_dawg_search(obj->data, search, search_length, obj->node_size, false);
 
                 if (result.found) {
                     if (result.final) {
@@ -638,7 +637,7 @@ class CompactDawg : public Nan::ObjectWrap {
                             if (obj->node_size == INCLUDES_ENTRY_COUNT) {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
                             } else {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size, true);
                             }
                             if (result.found) {
                                 return_val = result.final ? 2 : 1;
@@ -657,7 +656,7 @@ class CompactDawg : public Nan::ObjectWrap {
                             if (obj->node_size == INCLUDES_ENTRY_COUNT) {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
                             } else {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size, true);
                             }
                             if (result.found) {
                                 return_val = result.final ? 2 : 1;

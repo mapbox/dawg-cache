@@ -4,7 +4,7 @@ var queue = require('queue-async');
 var zlib = require('zlib');
 var forOf = require('es6-iterator/for-of');
 require('collections/collections.js');
-var binding = require("../lib/jsdawg.node");
+var binding = require("../lib/binding/jsdawg.node");
 var fs = require("fs");
 var jsdawg = require("../index");
 
@@ -40,59 +40,58 @@ test('Fuzzy Compact DAWG test', function(t) {
 // Test that dawg contains all words
     var exactLookup = true;
     for (var i = 0; i < words.length; i++) {
-        exactLookup = exactLookup && dawg.lookup(words[i]);
+        exactLookup = exactLookup && compactDawg.lookup(words[i]);
     }
     t.assert(exactLookup, "dawg contains all words");
 
 // Search for a word, not in the structure, but the structure contains a matching word missing a letter at the beginning/middle/end of the word
     // beginning
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("tyeomaness");
-    t.assert(exactLookup, "Search 'tyeomaness' returns 'yeomaness'");
+    exactLookup = exactLookup && compactDawg.lookup("eomaness");
+    t.assert(exactLookup, "Search 'eomaness' returns 'yeomaness'");
     // middle
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("yeomtaness");
-    t.assert(exactLookup, "Search 'yeomtaness' returns 'yeomaness'");
+    exactLookup = exactLookup && compactDawg.lookup("yeoaness");
+    t.assert(exactLookup, "Search 'yeoaness' returns 'yeomaness'");
     // end
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("yeomanesst");
-    t.assert(exactLookup, "Search 'yeomanesst' returns 'yeomaness'");
+    exactLookup = exactLookup && compactDawg.lookup("yeomanes");
+    t.assert(exactLookup, "Search 'yeomanes' returns 'yeomaness'");
 
 //Search for a word, not in the structure, but contains an extra letter at the beginning/middle/end of the word
     // beginning
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("tyeniseian");
+    exactLookup = exactLookup && compactDawg.lookup("tyeniseian");
     t.assert(exactLookup, "Search 'tyeniseian' returns 'yeniseian'");
     // middle
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("yenisteian");
+    exactLookup = exactLookup && compactDawg.lookup("yenisteian");
     t.assert(exactLookup, "Search 'yenisteian' returns 'yeniseian");
-    // end 
+    // end
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("yeniseiant");
+    exactLookup = exactLookup && compactDawg.lookup("yeniseiant");
     t.assert(exactLookup, "Search 'yeniseiant' returns 'yeniseian");
 
 //Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2) a word missing a letter at the beginning/middle/end of the word
 // In this instance we need to decide which should return.
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("dogtg");
+    exactLookup = exactLookup && compactDawg.lookup("dogtg");
     t.assert(exactLookup, "Search 'dogtg' returns 'dog' instead of 'dogg'");
 
 // Search for a word, not in the structure, but the structure contains multiple options
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("cat");
+    exactLookup = exactLookup && compactDawg.lookup("cat");
     t.assert(exactLookup, "Search 'cat' returns 'cart' instead of 'cast'");
 
 //more than one occurence of a character should return null, which is falsey
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("wrongheeeeadedness");
+    exactLookup = exactLookup && compactDawg.lookup("wrongheeeeadedness");
     t.assert(!exactLookup, "Search 'wrongheeeeadedness' returns null");
 
 //deletion of a correct character should retrurn null, which is falsey
     exactLookup = true;
-    exactLookup = exactLookup && dawg.lookup("wrogheadness");
+    exactLookup = exactLookup && compactDawg.lookup("wrogheadness");
     t.assert(!exactLookup, "Search 'wrogheadness' returns null");
 
     t.end();
 });
-
