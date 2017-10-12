@@ -162,6 +162,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     int node_offset = 0, edge_count = 0, edge_offset = 0, min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
     bool exact_match = true;
+    bool fuzzed = false;
     std::string match_string;
 
     dawg_search_result output;
@@ -212,10 +213,12 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
         } else {
             exact_match = false;
             fuzzy_flag = true;
-            if (exact_match == false && fuzzy_flag == true) {
+            if (fuzzed == false && fuzzy_flag == true) {
                 // fuzz the search
+                fuzzed = true;
+            } else {
+                return output;
             }
-            return output;
         }
     }
 
@@ -224,7 +227,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
     output.final = (node_final != 0u);
     output.skipped = -1;
     output.child_count = -1;
-    output.match_string = std::make_unique<std::string>(match_string);;
+    output.match_string = std::make_unique<std::string>(match_string);
     output.exact_match = exact_match;
 
     return output;
