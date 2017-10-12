@@ -36,7 +36,7 @@ binding.Dawg.prototype.toCompactDawg = function(preserveCounts) {
 binding.CompactDawg.prototype.lookupPrefix = binding.CompactDawg.prototype._lookup;
 
 binding.CompactDawg.prototype.lookup = function(prefix) {
-    let out = this._lookup(prefix);
+    var out = this._lookup(prefix);
     return out && out.final ? out : null;
 }
 
