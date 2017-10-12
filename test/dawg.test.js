@@ -16,12 +16,26 @@ test('DAWG test invalid usage', function (t) {
     t.throws(function() { dawg.lookup(null) }, /first argument must be a String/, "validates inserted value");
     t.throws(function() { dawg.lookupPrefix(null) }, /first argument must be a String/, "validates inserted value");
     t.throws(function() { dawg.insert('') }, /empty string passed to insert/, "validates inserted value");
+
+    dawg.insert('z');
+    t.throws(function() { dawg.insert('a'); }, 'words must be inserted in lexicographical order');
     dawg.finish();
+
     var compactDawg = dawg.toCompactDawg();
     t.equals(compactDawg.lookup(), null);
     t.equals(compactDawg.lookupPrefix(), null);
     t.equals(compactDawg.lookup({}), null);
     t.equals(compactDawg.lookupPrefix({}), null);
+
+    // ensure a non-construct call also works
+    t.doesNotThrow(function() { jsdawg.Dawg(); });
+
+    // test compact dawg constructor directly
+    t.throws(function() { jsdawg.CompactDawg(); })
+    t.throws(function() { new jsdawg.CompactDawg(); });
+    t.throws(function() { new jsdawg.CompactDawg(42); })
+    t.throws(function() { new jsdawg.CompactDawg({}); });
+
     t.end();
 });
 
@@ -101,12 +115,19 @@ test('Read-write DAWG test', function(t) {
     t.assert(!dawg.lookup(""), "dawg does not contain the empty string as a term");
     t.assert(dawg.lookupPrefix(""), "dawg does contain the empty string as a prefix");
 
+    dawg.finish();
+
+    // I don't care about the values these functions return at all... they exist
+    // only for debugging and are not exercised ever in typical usage.
+    // but, run them anyway, and ensure that, I dunno, they don't crash? so that
+    // the coverage tool shuts up
+    t.ok(dawg.edgeCount(), "edge count works");
+    t.ok(dawg.nodeCount(), "node count works");
+
     t.end();
 });
 
 test('Compact DAWG test', function(t) {
-    dawg.finish();
-
     var compactDawg = dawg.toCompactDawg(false);
     t.pass("compact dawg created")
 
@@ -200,12 +221,12 @@ test('Compact DAWG test', function(t) {
     t.assert(!compactDawg.lookup(""), "compact dawg does not contain the empty string as a term");
     t.assert(compactDawg.lookupPrefix(""), "compact dawg does contain the empty string as a prefix");
 
+    t.equals(compactDawg.lookup(new Array(2048).fill('a').join('')), null, 'searches for very long strings behave themselves');
+
     t.end();
 });
 
 test('Compact DAWG test with embedded counts', function(t) {
-    dawg.finish();
-
     var compactDawg = dawg.toCompactDawg(true);
     t.pass("compact dawg created with counts")
 
@@ -277,7 +298,6 @@ test('Compact DAWG test with embedded counts', function(t) {
     t.assert(testMatch.suffixCount == blea_count, "'blea' has correct number of suffixes");
 
     var compactDawgWords = [];
-    var compactDawg = dawg.toCompactDawg();
     forOf(compactDawg, function(value) { compactDawgWords.push(value); });
     var iteratorLookup = true;
     for (var i = 0; i < words.length; i++) {
@@ -343,7 +363,13 @@ test('Compact DAWG test with embedded counts', function(t) {
     t.assert(prefixLookup, "compact dawg does not contain prefixes of all words as terms");
 
     t.assert(!compactDawg.lookup(""), "compact dawg does not contain the empty string as a term");
-    t.assert(compactDawg.lookupPrefix(""), "compact dawg does contain the empty string as a prefix");
+    var emptyPrefix = compactDawg.lookupPrefix("");
+    t.assert(emptyPrefix, "compact dawg does contain the empty string as a prefix");
+    t.deepEquals(
+        emptyPrefix,
+        { final: false, index: 0, suffixCount: words.length, text: ''},
+        "compact dawg empty string prefix search returns a suffix count equal to the total number of words"
+    );
 
     t.end();
 });
