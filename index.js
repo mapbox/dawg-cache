@@ -33,31 +33,11 @@ binding.Dawg.prototype.toCompactDawg = function(preserveCounts) {
     return new binding.CompactDawg(validate(this.toCompactDawgBuffer(preserveCounts)));
 }
 
-binding.CompactDawg.prototype.lookupPrefix = function(prefix) {
-    return this._lookup(prefix) != 0;
-}
+binding.CompactDawg.prototype.lookupPrefix = binding.CompactDawg.prototype._lookup;
 
 binding.CompactDawg.prototype.lookup = function(prefix) {
-    var lookup = this._lookup(prefix);
-    return lookup == 2 || lookup[0] == 2;
-}
-
-binding.CompactDawg.prototype.lookupPrefixCounts = function(prefix) {
-    var result = this._lookup(prefix);
-    if (result != 0) {
-        return {found: true, index: result[1], suffixCount: result[2], text: result[3] ? result[3] : prefix};
-    } else {
-        return {found: false}
-    }
-}
-
-binding.CompactDawg.prototype.lookupCounts = function(prefix) {
-    var result = this._lookup(prefix);
-    if (result != 0 && result[0] == 2) {
-        return {found: true, index: result[1], suffixCount: result[2], text: result[3] ? result[3] : prefix};
-    } else {
-        return {found: false}
-    }
+    var out = this._lookup(prefix);
+    return out && out.final ? out : null;
 }
 
 binding.CompactDawg.prototype.iterator = function(prefix) {
