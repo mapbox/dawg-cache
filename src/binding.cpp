@@ -669,8 +669,6 @@ class CompactDawg : public Nan::ObjectWrap {
         } else {
             info.GetReturnValue().Set(Nan::Null());
         }
-
-        return;
     }
 
     static NAN_METHOD(Iterator) {
