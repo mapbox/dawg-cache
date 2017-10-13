@@ -54,7 +54,7 @@ test('Fuzzy Compact DAWG test', function(t) {
     t.assert(fuzzed, "Search 'yeoaness' returns 'yeomaness' -- middle deletion");
     // t.equals(fuzzed.exact_match, false, "exact_match equals false")
     // end
-    fuzzed = compactDawg.lookup("yeomanes", true);
+    fuzzed = compactDawg.lookupPrefix("yeomanes", true);
     t.assert(fuzzed, "Search 'yeomanes' returns 'yeomaness' -- end deletion");
     // t.equals(fuzzed.exact_match, false, "exact_match equals false")
 
