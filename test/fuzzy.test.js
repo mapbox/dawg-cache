@@ -93,5 +93,11 @@ test('Fuzzy Compact DAWG test', function(t) {
     fuzzed = compactDawg.lookup("wrogheadness");
     t.assert(!fuzzed, "Search 'wrogheadness' returns null");
 
+//Oklahoma Oakland example -- haven't done
+    fuzzed = compactDawg.lookup("okland", true);
+    console.log('oakland example', fuzzed);
+    // t.assert(fuzzed, "Search 'tyeniseian' returns 'yeniseian'");
+    // t.equals(fuzzed.exact_match, false, "exact_match equals false")
+
     t.end();
 });

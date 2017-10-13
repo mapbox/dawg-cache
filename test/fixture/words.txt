@@ -2,6 +2,8 @@ cast
 cart
 dog
 dogg
+oakland
+oklahoma
 yeniseian
 yenite
 yentnite
