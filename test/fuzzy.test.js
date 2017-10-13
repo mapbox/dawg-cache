@@ -47,35 +47,34 @@ test('Fuzzy Compact DAWG test', function(t) {
 // Search for a word, not in the structure, but the structure contains a matching word missing a letter at the beginning/middle/end of the word
     // beginning
     var fuzzed = compactDawg.lookup("eomaness", false);
-    t.assert(fuzzed, "Search 'eomaness' returns 'yeomaness'");
+    t.assert(fuzzed, "Search 'eomaness' returns 'yeomaness' -- beginning deletion");
     // t.equals(fuzzed.exact_match, false, "exact_match equals false")
     // middle
     fuzzed = compactDawg.lookup("yeoaness", true);
-    t.assert(fuzzed, "Search 'yeoaness' returns 'yeomaness'");
+    t.assert(fuzzed, "Search 'yeoaness' returns 'yeomaness' -- middle deletion");
     // t.equals(fuzzed.exact_match, false, "exact_match equals false")
     // end
     fuzzed = compactDawg.lookup("yeomanes", true);
-    t.assert(fuzzed, "Search 'yeomanes' returns 'yeomaness'");
+    t.assert(fuzzed, "Search 'yeomanes' returns 'yeomaness' -- end deletion");
     // t.equals(fuzzed.exact_match, false, "exact_match equals false")
 
 //Search for a word, not in the structure, but contains an extra letter at the beginning/middle/end of the word
     // actual
     fuzzed = compactDawg.lookup("yeniseian", true);
     t.assert(fuzzed, "Search 'yeniseian' returns 'yeniseian'");
-    t.equals(fuzzed.exact_match, true, "exact_match equals true")
+    t.equals(fuzzed.exact_match, true, "exact_match equals true -- exact_match")
     // beginning
     fuzzed = compactDawg.lookup("tyeniseian", true);
     t.assert(fuzzed, "Search 'tyeniseian' returns 'yeniseian'");
-    t.equals(fuzzed.exact_match, false, "exact_match equals false")
+    t.equals(fuzzed.exact_match, false, "exact_match equals false -- beginning addition")
     // middle
     fuzzed = compactDawg.lookup("yenisteian", true);
     t.assert(fuzzed, "Search 'yenisteian' returns 'yeniseian");
-    t.equals(fuzzed.exact_match, false, "exact_match equals false")
+    t.equals(fuzzed.exact_match, false, "exact_match equals false -- middle addition")
     // end
     fuzzed = compactDawg.lookup("yeniseiant", true);
     t.assert(fuzzed, "Search 'yeniseiant' returns 'yeniseian");
-    t.equals(fuzzed.exact_match, false, "exact_match equals false")
-    t.equals(fuzzed.exact_match, false, "exact_match equals false")
+    t.equals(fuzzed.exact_match, false, "exact_match equals false -- end addition")
 //Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2) a word missing a letter at the beginning/middle/end of the word
 // In this instance we need to decide which should return.
     fuzzed = compactDawg.lookup("dogtg");
