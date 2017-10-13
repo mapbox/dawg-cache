@@ -46,7 +46,7 @@ test('Fuzzy Compact DAWG test', function(t) {
 
 // Search for a word, not in the structure, but the structure contains a matching word missing a letter at the beginning/middle/end of the word
     // beginning
-    var fuzzed = compactDawg.lookup("eomaness", false);
+    var fuzzed = compactDawg.lookup("eomaness", true);
     t.assert(fuzzed, "Search 'eomaness' returns 'yeomaness' -- beginning deletion");
     // t.equals(fuzzed.exact_match, false, "exact_match equals false")
     // middle
@@ -77,11 +77,11 @@ test('Fuzzy Compact DAWG test', function(t) {
     t.equals(fuzzed.exact_match, false, "exact_match equals false -- end addition")
 //Search for a word, not in the structure, but the structure contains 1)a word with an extra letter and 2) a word missing a letter at the beginning/middle/end of the word
 // In this instance we need to decide which should return.
-    fuzzed = compactDawg.lookup("dogtg");
+    fuzzed = compactDawg.lookup("dogtg", true);
     t.assert(fuzzed, "Search 'dogtg' returns 'dog' instead of 'dogg'");
 
 // Search for a word, not in the structure, but the structure contains multiple options
-    fuzzed = compactDawg.lookup("cat");
+    fuzzed = compactDawg.lookup("cat", true);
     t.assert(fuzzed, "Search 'cat' returns 'cart' instead of 'cast'");
 
 //more than one occurence of a character should return null, which is falsey
