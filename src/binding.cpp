@@ -230,7 +230,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
 
                         int child_edge_count = static_cast<int>(data[child_node_offset]);
 
-                        for (int k = 0; k < child_edge_count ; k++) {
+                        for (int k = 0; k < child_edge_count; k++) {
                             int grand_child_edge_offset = child_node_offset + node_size + (5 * k);
                             int grand_child_letter = data[grand_child_edge_offset];
 
