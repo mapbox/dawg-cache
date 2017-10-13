@@ -222,13 +222,13 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                     memcpy(&child_flagged_offset, &(data[child_ptr]), sizeof(unsigned int));
 
                     //to get to the child ptr
-                    int child_node_offset = static_cast<int>(child_flagged_offset & FINAL_MASK);
+                    auto child_node_offset = static_cast<int>(child_flagged_offset & FINAL_MASK);
                     unsigned int child_node_final = child_flagged_offset & IS_FINAL_FLAG;
 
                     //if the child_node_offset is -1 --> deadend
                     if (child_node_offset != 0) {
 
-                        int child_edge_count = static_cast<int>(data[child_node_offset]);
+                        auto child_edge_count = static_cast<int>(data[child_node_offset]);
 
                         for (int k = 0; k < child_edge_count; k++) {
                             int grand_child_edge_offset = child_node_offset + node_size + (5 * k);
@@ -255,7 +255,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
             //addition only if deletion doesn't find a match
             if (!match) {
                 exact_match = false;
-                if (fuzzed == false && fuzzy_flag == true) {
+                if (!fuzzed && fuzzy_flag) {
                     fuzzed = true;
                 } else {
                     return output;
