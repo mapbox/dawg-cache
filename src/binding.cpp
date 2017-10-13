@@ -168,7 +168,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
 
     dawg_search_result output;
 
-    for (size_t i = 0; i < search_length; i++) {
+    for (int i = 0; i < search_length; i++) {
         // binary search over the node edges
         match = false; // NOLINT (clang tidy thinks it is not used but it is)
         search_letter = search[i];
