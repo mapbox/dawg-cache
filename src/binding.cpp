@@ -168,7 +168,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
 
     dawg_search_result output;
 
-    for (size_t i = 0; i < search_length; i++) {
+    for (int i = 0; i < search_length; i++) {
         // binary search over the node edges
         match = false; // NOLINT (clang tidy thinks it is not used but it is)
         search_letter = search[i];
@@ -224,15 +224,15 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                     memcpy(&child_flagged_offset, &(data[child_edge_offset + 1]), sizeof(unsigned int));
 
                     //to get to the child ptr
-                    int child_node_offset = static_cast<int>(child_flagged_offset & FINAL_MASK);
+                    auto child_node_offset = static_cast<int>(child_flagged_offset & FINAL_MASK);
                     unsigned int child_node_final = child_flagged_offset & IS_FINAL_FLAG;
 
                     //if the child_node_offset is -1 --> deadend
                     if (child_node_offset != 0) {
 
-                        int child_edge_count = static_cast<int>(data[child_node_offset]);
+                        auto child_edge_count = static_cast<int>(data[child_node_offset]);
 
-                        for (int k = 0; k < child_edge_count ; k++) {
+                        for (int k = 0; k < child_edge_count; k++) {
                             int grand_child_edge_offset = child_node_offset + node_size + (5 * k);
                             unsigned char grand_child_letter = data[grand_child_edge_offset];
 
@@ -738,8 +738,6 @@ class CompactDawg : public Nan::ObjectWrap {
         } else {
             info.GetReturnValue().Set(Nan::Null());
         }
-
-        return;
     }
 
     static NAN_METHOD(Iterator) {
