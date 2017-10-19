@@ -35,8 +35,8 @@ binding.Dawg.prototype.toCompactDawg = function(preserveCounts) {
 
 binding.CompactDawg.prototype.lookupPrefix = binding.CompactDawg.prototype._lookup;
 
-binding.CompactDawg.prototype.lookup = function(prefix, fuzzy_flag) {
-    var out = this._lookup(prefix, fuzzy_flag);
+binding.CompactDawg.prototype.lookup = function(prefix, try_fuzzy_search) {
+    var out = this._lookup(prefix, try_fuzzy_search);
     return out && out.final ? out : null;
 }
 

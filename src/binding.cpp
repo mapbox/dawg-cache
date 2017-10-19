@@ -157,13 +157,13 @@ struct dawg_search_result {
 
 //parameters - character array of our data, character array of the strong to search, length of the query string, size of the node
 //since the counted_dawg_cache also stores the count, the value of node_size = 1 || 5 for compact_dawg_cache || counted_compact_dawg_cache
-dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size, bool fuzzy_flag) {
+dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char* search, size_t search_length, unsigned int node_size, bool try_fuzzy_search) {
     unsigned int flagged_offset, node_final = 0;
     bool match = false;
     int node_offset = 0, edge_count = 0, edge_offset = 0, min = 0, max = 0, guess = 0;
     unsigned char search_letter, letter;
     bool exact_match = true;
-    bool fuzzed = false;
+    bool fuzzy_search_done = false;
     std::string match_string;
 
     dawg_search_result output;
@@ -212,14 +212,16 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                 node_offset = -1;
             }
         } else {
-            if (node_offset != -1 && fuzzy_flag) {
+            if (node_offset != -1 && try_fuzzy_search) {
+                exact_match = false;
                 //check deletion first
                 //loop over child nodes
                 for (int j = 0; j < edge_count; j++) {
                     //loop over grandchildren nodes, after calculating size of the grand_child (32 bit ptr)
-                    unsigned int child_ptr = node_offset + node_size + (5 * j) + 1;
+                    unsigned int child_edge_offset = node_offset + node_size + (5 * j);
+                    unsigned char child_letter = data[child_edge_offset];
                     unsigned int child_flagged_offset;
-                    memcpy(&child_flagged_offset, &(data[child_ptr]), sizeof(unsigned int));
+                    memcpy(&child_flagged_offset, &(data[child_edge_offset + 1]), sizeof(unsigned int));
 
                     //to get to the child ptr
                     int child_node_offset = static_cast<int>(child_flagged_offset & FINAL_MASK);
@@ -232,7 +234,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
 
                         for (int k = 0; k < child_edge_count ; k++) {
                             int grand_child_edge_offset = child_node_offset + node_size + (5 * k);
-                            int grand_child_letter = data[grand_child_edge_offset];
+                            unsigned char grand_child_letter = data[grand_child_edge_offset];
 
                             if (grand_child_letter == search_letter) {
                                 //we use -1 to distinguish between a deadend and the root node, see line 211
@@ -242,6 +244,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
                                 node_offset = child_node_offset;
                                 node_final = child_node_final;
                                 i--;
+                                match_string += child_letter;
                                 match = true;
                                 break;
                             }
@@ -255,8 +258,8 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
             //addition only if deletion doesn't find a match
             if (!match) {
                 exact_match = false;
-                if (fuzzed == false && fuzzy_flag == true) {
-                    fuzzed = true;
+                if (fuzzy_search_done == false && try_fuzzy_search == true) {
+                    fuzzy_search_done = true;
                 } else {
                     return output;
                 }
@@ -649,9 +652,9 @@ class CompactDawg : public Nan::ObjectWrap {
     static NAN_METHOD(Lookup) {
         auto* obj = Nan::ObjectWrap::Unwrap<CompactDawg>(info.This());
         v8::Local<v8::Value> js_val = info[0];
-        bool fuzzy_flag = false;
+        bool try_fuzzy_search = false;
         if (info.Length() > 1) {
-            fuzzy_flag = info[1]->IsBoolean() && info[1]->BooleanValue();
+            try_fuzzy_search = info[1]->IsBoolean() && info[1]->BooleanValue();
         }
         dawg_search_result result;
         // https://github.com/nodejs/node/commit/44a40325da4031f5a5470bec7b07fb8be5f9e99e
@@ -682,7 +685,7 @@ class CompactDawg : public Nan::ObjectWrap {
                             if (obj->node_size == INCLUDES_ENTRY_COUNT) {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size);
                             } else {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size, fuzzy_flag);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(&arena[0]), utf8_length, obj->node_size, try_fuzzy_search);
                             }
                         } else {
                             char arena[arena_size];
@@ -696,7 +699,7 @@ class CompactDawg : public Nan::ObjectWrap {
                             if (obj->node_size == INCLUDES_ENTRY_COUNT) {
                                 result = counted_compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size);
                             } else {
-                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size, fuzzy_flag);
+                                result = compact_dawg_search(reinterpret_cast<unsigned char*>(obj->data), reinterpret_cast<unsigned char*>(arena), utf8_length, obj->node_size, try_fuzzy_search);
                             }
                         }
                     } else {
