@@ -258,7 +258,7 @@ dawg_search_result compact_dawg_search(unsigned char* data, const unsigned char*
             //addition only if deletion doesn't find a match
             if (!match) {
                 exact_match = false;
-                if (fuzzy_search_done == false && try_fuzzy_search == true) {
+                if (!fuzzy_search_done && try_fuzzy_search) {
                     fuzzy_search_done = true;
                 } else {
                     return output;
